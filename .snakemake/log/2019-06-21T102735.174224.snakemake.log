@@ -1,0 +1,4 @@
+NameError in line 43 of /rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile:
+name 'sconfig' is not defined
+  File "/rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile", line 48, in <module>
+  File "/rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile", line 43, in customExpand

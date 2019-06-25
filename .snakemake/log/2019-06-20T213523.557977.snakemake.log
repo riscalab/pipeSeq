@@ -1,0 +1,3 @@
+KeyError in line 41 of /rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile:
+'{lib}'
+  File "/rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile", line 41, in <module>
