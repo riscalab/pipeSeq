@@ -183,7 +183,8 @@ rule filterBamWithBlacklist:
     input:
         "{sample}/{sample}_{lane}_001.trim.st.all.bam"
     output:
-        bfltBam = conditionalExpand_1(os.path.exists(config['blacklist']), 
+        #"{sample}/{sample}_{lane}_001.trim.st.all{bflt,.*}.bam",
+        outFile = conditionalExpand_1(os.path.exists(config['blacklist']), 
             "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam", 
             "{sample}/{sample}_{lane}_001.trim.st.all.bam"),
         filterLog = "{sample}/filtering.log"
@@ -194,7 +195,7 @@ rule filterBamWithBlacklist:
         if os.path.exists(params.blacklist):
             shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads")
             shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > temp.bam") # produces temp file
-            shell("samtools view -bh -f 0x2 temp.bam -o {output.blftBam}")
+            shell("samtools view -bh -f 0x2 temp.bam -o {params.outFile}")
             shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {output.filterLog}")
         else:
             shell("echo 'sh02a_filter_bam.sh: Blacklist file not found or specified. Skipping blacklist filter.'")
@@ -206,13 +207,16 @@ rule filterBamWithBlacklist:
 
 rule filterBamWithMapQ:
     input:
+        #inFile = "{sample}/{sample}_{lane}_001.trim.st.all{bflt,.*}.bam"
         inFile = conditionalExpand_1(MAPQ, 
             "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam", 
             "{sample}/{sample}_{lane}_001.trim.st.all.bam")
     output:
-        outFile = conditionalExpand_1(MAPQ, 
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.bam", 
-            "{sample}/{sample}_{lane}_001.trim.st.all.qft.bam"),
+        outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.bam",
+            "{sample}/{sample}_{lane}_001.trim.st.all.qft.bam",
+            "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam",
+            "{sample}/{sample}_{lane}_001.trim.st.all.bam"),
         filterLog = "{sample}/filtering.log"
     params:
         mapq = MAPQ
@@ -221,6 +225,7 @@ rule filterBamWithMapQ:
             shell("echo 'sh02a_filter_bam.sh: Removing low quality reads'")
             shell("samtools view -bh -f 0x2 -q {params.mapq} {input.inFile} -o {output.outFile}")
             shell("echo 'Filtered with mapping quality filter {params.mapq}.' >> {output.filterLog}")
+        else:
             shell("echo 'sh02a_filter_bam.sh: Mapping quality threshold not specified, quality filter skipped'")
             shell("echo 'Did not filter by mapping quality.' >> {output.filterLog}")
 
