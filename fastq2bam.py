@@ -2,6 +2,7 @@
 # npagane | 190618 | risca lab | execute fastq2bam pipeline remotely
 
 import os
+import sys
 
 # initialize dictionary to store parameters
 keys = ['sampleText', 'fastqDir', 'genomeRef', 'blacklist', 'fastaRef']
@@ -15,6 +16,8 @@ prompts = {
 }
 
 if __name__ == '__main__':
+    cores = sys.argv[1].strip()
+    print(cores)
     # gather tags from standard output
     tags = ''
     wd = ' ' + input(prompts["fastqDir"]).strip()
@@ -23,5 +26,5 @@ if __name__ == '__main__':
             tags += ' ' + str(i) + '=' + input(prompts[i]).strip()
     # append fastqDir to set working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --directory' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
-    # add -n tag for dry run
+    os.system('snakemake --cores ' + cores + ' --directory' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
+    # add -n tag for dry run # CHANGE CORE NUMBER

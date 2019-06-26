@@ -6,17 +6,18 @@
 ################################
 
 import os
+ruleorder: fastqQC_and_trimAdapters > unzipTrimforAlignment > alignInserts_and_fastqScreen
 
 # reassign the file to sample names to a list of the actual samples
 SAMPLES = []
 with open(config['sampleText']) as ftp:
     lines = ftp.readlines()
-    lane = {}
+    sampleNum = {}
     cnt = 1
     for line in lines:
         sample = line.strip()
         SAMPLES.append(sample)
-        lane[sample] = str(cnt)
+        sampleNum[sample] = str(cnt)
         cnt += 1
 
 # additional fastq file name variables like runs etc. 
@@ -33,7 +34,7 @@ def customSeqFileExpand(iden, ext, wd = False): # enter wildcards argument if it
             primer = ''
         # create files
         for i in iden:
-            ftp = primer + sample + '_S' + lane[sample] + i + '_001' + ext 
+            ftp = primer + sample + '_S' + sampleNum[sample] + i + '_001' + ext 
             strout.append(ftp)
     return strout
 
@@ -78,14 +79,31 @@ MAPQ = 30 # maybe make this a prompt at somepoint.. but for now, this is fine
 
 rule all:
     input:
-        customSeqFileExpand(TAGS, '.fastq.gz', True), # path rule 1
-        customSeqFileExpand(['_R1', '_R2'], '_fastqc.html', True), # path rule 2
-        customSeqFileExpand(['_R1', '_R2'], '.trim.fastq.gz', True), # path rule 2
-        customSeqFileExpand([''], '.trim.bam', True), # path rule 3
-        customSeqFileExpand([''], '.trim.st.bam', True), # path rule 4
-        customSeqFileExpand([''], '.trim.st.all.bam', True), # path rule 5
-         customFileExpand("/hist_data_withdups.log"), #path rule 8
-        customFileExpand("hist_graphwithoutdups.pdf") # path rule 9
+        customSeqFileExpand(TAGS, '.fastq.gz', True), # rule 1
+        customSeqFileExpand(['_R1', '_R2'], '.trim.fastq.gz', True), # rule 2
+        customSeqFileExpand([''], '.trim.bam', True), # rule 3
+        #customSeqFileExpand([''], '.trim.st.bam', True), # rule 4
+        #customSeqFileExpand([''], '.trim.st.all.bam', True), # rule 5
+        #customSeqFileExpand([''],
+        #    conditionalExpand_1(os.path.exists(config['blacklist']), 
+        #        ".trim.st.all.blft.bam", 
+        #        ".trim.st.all.bam"),
+        #    True), # rule 6
+        #customSeqFileExpand([''],
+        #    conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #        ".trim.st.all.blft.qft.bam",
+        #        ".trim.st.all.qft.bam",
+        #        ".trim.st.all.blft.bam",
+        #        ".trim.st.all.bam"),
+        #    True), # rule 7
+        #customSeqFileExpand([''],
+        #    conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #        ".trim.st.all.blft.qft.rmdup.bam",
+        #        ".trim.st.all.qft.rmdup.bam",
+        #        ".trim.st.all.blft.rmdup.bam",
+        #        ".trim.st.all.rmdup.bam"),
+        #    True), # rule 8
+        #customFileExpand("hist_datawithoutdups.log") # rule 9
 
 ################################
 # organize sample directories (1)
@@ -93,11 +111,12 @@ rule all:
 
 rule createSampleDirectories:
     input:
-        "{sample}_{lane}_{tag}_001.fastq.gz"
+        "{sample}_{sampleNum}_{tag}_001.fastq.gz"
     output:
-        "{sample}/{sample}_{lane}_{tag}_001.fastq.gz"
+        "{sample}/{sample}_{sampleNum}_{tag}_001.fastq.gz"
     shell:
         "mv {input} {output}"
+
 
 ################################
 # QC of fastq files and trim (2)
@@ -105,18 +124,30 @@ rule createSampleDirectories:
 
 rule fastqQC_and_trimAdapters:
     input:
-        r1 = "{sample}/{sample}_{lane}_R1_001.fastq.gz",
-        r2 = "{sample}/{sample}_{lane}_R2_001.fastq.gz"
+        r1 = "{sample}/{sample}_{sampleNum}_R1_001.fastq.gz",
+        r2 = "{sample}/{sample}_{sampleNum}_R2_001.fastq.gz"
     output:
-        "{sample}/{sample}_{lane}_R1_001_fastqc.html",
-        "{sample}/{sample}_{lane}_R2_001_fastqc.html",
-        #"{sample}/{sample}_{lane}_R1_001_fastqc.zip", zip files for html
-        #"{sample}/{sample}_{lane}_R2_001_fastqc.zip", zip file for html
-        "{sample}/{sample}_{lane}_R1_001.trim.fastq.gz",
-        "{sample}/{sample}_{lane}_R2_001.trim.fastq.gz"
+        "{sample}/{sample}_{sampleNum}_R1_001_fastqc.html",
+        "{sample}/{sample}_{sampleNum}_R2_001_fastqc.html",
+        "{sample}/{sample}_{sampleNum}_R1_001_fastqc.zip", # zip files for html
+        "{sample}/{sample}_{sampleNum}_R2_001_fastqc.zip", # zip file for html
+        r1 = "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq.gz",
+        r2 = "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq.gz"
     run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
         shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_001.trim.fastq.gz {output.r1}")
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_001.trim.fastq.gz {output.r2}")
+
+
+
+rule unzipTrimforAlignment:
+    input:
+        "{sample}/{sample}_{sampleNum}_{tag}_001.trim.fastq.gz"
+    output:
+        "{sample}/{sample}_{sampleNum}_{tag}_001.trim.fastq"
+    shell:
+        "gunzip -f {input}"
 
 ################################
 # align inserts and fastq screen (3)
@@ -124,37 +155,34 @@ rule fastqQC_and_trimAdapters:
 
 rule alignInserts_and_fastqScreen:
     input:
-        zip1 = "{sample}/{sample}_{lane}_R1_001.trim.fastq.gz",
-        zip2 = "{sample}/{sample}_{lane}_R2_001.trim.fastq.gz",
+        unzip1 = "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq",
+        unzip2 = "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq"
     output:
-        bam = "{sample}/{sample}_{lane}_001.trim.bam",
-        alignLog = "{sample}/{sample}_{lane}_001.trim.alignlog",
+        "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq.gz",
+        "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq.gz",
+        bam = "{sample}/{sample}_{sampleNum}_001.trim.bam",
+        alignLog = "{sample}/{sample}_{sampleNum}_001.trim.alignlog"
     params:
-        unzip1 = "{sample}/{sample}_{lane}_R1_001.trim.fastq",
-        unzip2 = "{sample}/{sample}_{lane}_R2_001.trim.fastq",
         ref = config['genomeRef'],
         screen = "screen.log"
     run:
-        shell("gunzip {input.zip1}") # unzip
-        shell("gunzip {input.zip2}") # unzip
-        shell("(bowtie2 -p28 -x {params.ref} -1 {params.unzip1} -2 {params.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
-        shell("fastq_screen --aligner bowtie2 {params.unzip1} {params.unzip2}")
+        shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
+        shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}")
         shell("{params.screen}")
-        shell("gzip {output.unzip1}") # zip
-        shell("gzip {output.unzip2}") # zip
-
+        shell("gzip -f {input.unzip1}") # zip
+        shell("gzip -f {input.unzip2}") # zip
+"""
 ################################
 # sort bam files for filtering (4)
 ################################
 
 rule sortBam:
     input:
-        "{sample}/{sample}_{lane}_001.trim.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.bam"
     output:
-        "{sample}/{sample}_{lane}_001.trim.st.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.bam"
     run:
         shell("picard SortSam  I={input}  O={ouput}  SORT_ORDER=coordinate")
-
 
 ################################
 # bam filtering with samtools (5)
@@ -162,12 +190,12 @@ rule sortBam:
 
 rule filterBam:
     input:
-        "{sample}/{sample}_{lane}_001.trim.st.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.bam"
     output:
-        allBam = "{sample}/{sample}_{lane}_001.trim.st.all.bam",
+        allBam = "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam",
         filterLog = "{sample}/filtering.log"
     params:
-        chrs = "`samtools view -H *.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2`"
+        #chrs = "`samtools view -H *.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2`"
     run:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
@@ -181,12 +209,12 @@ rule filterBam:
 
 rule filterBamWithBlacklist:
     input:
-        "{sample}/{sample}_{lane}_001.trim.st.all.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"
     output:
-        #"{sample}/{sample}_{lane}_001.trim.st.all{bflt,.*}.bam",
-        outFile = conditionalExpand_1(os.path.exists(config['blacklist']), 
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam", 
-            "{sample}/{sample}_{lane}_001.trim.st.all.bam"),
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam",
+        #outFile = conditionalExpand_1(os.path.exists(config['blacklist']), 
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam", 
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"),
         filterLog = "{sample}/filtering.log"
     params:
         blacklist = config['blacklist']
@@ -195,7 +223,7 @@ rule filterBamWithBlacklist:
         if os.path.exists(params.blacklist):
             shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads")
             shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > temp.bam") # produces temp file
-            shell("samtools view -bh -f 0x2 temp.bam -o {params.outFile}")
+            shell("samtools view -bh -f 0x2 temp.bam -o {wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all.blft.bam")
             shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {output.filterLog}")
         else:
             shell("echo 'sh02a_filter_bam.sh: Blacklist file not found or specified. Skipping blacklist filter.'")
@@ -207,23 +235,24 @@ rule filterBamWithBlacklist:
 
 rule filterBamWithMapQ:
     input:
-        #inFile = "{sample}/{sample}_{lane}_001.trim.st.all{bflt,.*}.bam"
-        inFile = conditionalExpand_1(MAPQ, 
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam", 
-            "{sample}/{sample}_{lane}_001.trim.st.all.bam")
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam"
+        #inFile = conditionalExpand_1(MAPQ, 
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam", 
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam")
     output:
-        outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.qft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.bam"),
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.bam",
+        #outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"),
         filterLog = "{sample}/filtering.log"
     params:
         mapq = MAPQ
     run:
         if MAPQ > 0:
             shell("echo 'sh02a_filter_bam.sh: Removing low quality reads'")
-            shell("samtools view -bh -f 0x2 -q {params.mapq} {input.inFile} -o {output.outFile}")
+            shell("samtools view -bh -f 0x2 -q {params.mapq} {input} -o {wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.blft}.qft.bam")
             shell("echo 'Filtered with mapping quality filter {params.mapq}.' >> {output.filterLog}")
         else:
             shell("echo 'sh02a_filter_bam.sh: Mapping quality threshold not specified, quality filter skipped'")
@@ -235,17 +264,19 @@ rule filterBamWithMapQ:
 
 rule histogramWithDuplicates_and_removeDuplicates:
     input:
-        inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.qft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.bam")
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.bam"
+        #inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam")
     output:
-        outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.qft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.rmdup.bam"),
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.rmdup.bam",
+        #outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.rmdup.bam"),
         filterLog = "{sample}/filtering.log",
         histDupsLog = "{sample}/hist_data_withdups.log",
         histDupsPDF = "{sample}/hist_graphwithdups.pdf",
@@ -255,11 +286,11 @@ rule histogramWithDuplicates_and_removeDuplicates:
         mapq = MAPQ
     run:
         shell("echo 'Histogram with duplicates'")
-        shell("picard CollectInsertSizeMetrics I={input.inFile} O={output.histDupsLog} H={output.histDupsPDF} W=1000 STOP_AFTER=50000")
+        shell("picard CollectInsertSizeMetricCs I={input} O={output.histDupsLog} H={output.histDupsPDF} W=1000 STOP_AFTER=50000")
         # remove duplicates
         shell("echo 'sh02b_remove_dups_estimate_diversity.sh: Removing duplicates'")
-        shell("picard MarkDuplicates I={input.inFile} O={output.outFile} METRICS_FILE={output.dupsLog} REMOVE_DUPLICATES=true")
-        shell("samtools index {output.outFile}")
+        shell("picard MarkDuplicates I={input} O={wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.bflt}{wildcards.qft}.rmdup.bam METRICS_FILE={output.dupsLog} REMOVE_DUPLICATES=true")
+        #shell("samtools index {output.outFile}") # moved this down a rule bc it should operate on input not output
 
 ################################
 # histogram with removed dups (9)
@@ -267,11 +298,12 @@ rule histogramWithDuplicates_and_removeDuplicates:
 
 rule histogramWithNoDuplicates:
     input:
-        inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.qft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.qft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.blft.rmdup.bam",
-            "{sample}/{sample}_{lane}_001.trim.st.all.rmdup.bam")
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.rmdup.bam"
+        #inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.rmdup.bam",
+        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.rmdup.bam")
     output:
         histNoDupsLog = "{sample}/hist_data_withoutdups.log",
         histNoDupsPDF = "{sample}/hist_graphwithoutdups.pdf"
@@ -279,18 +311,18 @@ rule histogramWithNoDuplicates:
         blacklist = config['blacklist'],
         mapq = 30
     run:
+        shell("samtools index {input}")
         shell("echo 'Histogram without duplicates'")
-        shell("picard CollectInsertSizeMetrics I={input.inFile} O={output.histNoDupsLog} H={output.histNoDupsPDF} W=1000 STOP_AFTER=50000")
+        shell("picard CollectInsertSizeMetrics I={input} O={output.histNoDupsLog} H={output.histNoDupsPDF} W=1000 STOP_AFTER=50000")
 
 
 ################################
 # clean up ??
 ################################
-'''
+
 rule cleanUp:
     input:
          "{sample}/hist_data_withoutdups.log"
     output:
         "{sample}/00_source/"
-
-'''
+"""
