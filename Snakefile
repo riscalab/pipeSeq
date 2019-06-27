@@ -24,7 +24,8 @@ if not os.path.exists(config['genomeRef']):
     config['genomeRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
 
 if not os.path.exists(config['blacklist']):
-    config['blacklist'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+    #config['blacklist'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+    config['blacklist'] = ""
 
 if not os.path.exists(config['fastaRef']):
     config['fastaRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome.fa"
@@ -94,18 +95,18 @@ rule all:
         customSeqFileExpand([''], '.trim.bam', True), # rule 3
         customSeqFileExpand([''], '.trim.st.bam', True), # rule 4
         customSeqFileExpand([''], '.trim.st.all.bam', True), # rule 5
-        #customSeqFileExpand([''],
-        #    conditionalExpand_1(os.path.exists(config['blacklist']), 
-        #        ".trim.st.all.blft.bam", 
-        #        ".trim.st.all.bam"),
-        #    True), # rule 6
-        #customSeqFileExpand([''],
-        #    conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-        #        ".trim.st.all.blft.qft.bam",
-        #        ".trim.st.all.qft.bam",
-        #        ".trim.st.all.blft.bam",
-        #        ".trim.st.all.bam"),
-        #    True), # rule 7
+        customSeqFileExpand([''],
+            conditionalExpand_1(os.path.exists(config['blacklist']), 
+                ".trim.st.all.blft.bam", 
+                ".trim.st.all.bam"),
+            True), # rule 6
+        customSeqFileExpand([''],
+            conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+                ".trim.st.all.blft.qft.bam",
+                ".trim.st.all.qft.bam",
+                ".trim.st.all.blft.bam",
+                ".trim.st.all.bam"),
+            True), # rule 7
         #customSeqFileExpand([''],
         #    conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
         #        ".trim.st.all.blft.qft.rmdup.bam",
@@ -225,64 +226,68 @@ rule filterBamWithBlacklist:
     input:
         "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"
     output:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam",
-        filterLog = "{sample}/filtering.log"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}.bam",
+        blft = "{sample}/{sample}_{sampleNum}_blftStep{blft,.*}.txt" # hardcode in input/output sequence in case of no filter
     params:
-        blacklist = config['blacklist']
+        blacklist = config['blacklist'],
+        filterLog = "{sample}/filtering.log"
+    wildcard_constraints:
+        blft = '|'.join([re.escape(x) for x in ["", "blft"]])
     run:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
             shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads")
             shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > temp.bam") # produces temp file
             shell("samtools view -bh -f 0x2 temp.bam -o {wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all.blft.bam")
-            shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {output.filterLog}")
+            shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {params.filterLog}")
         else:
             shell("echo 'sh02a_filter_bam.sh: Blacklist file not found or specified. Skipping blacklist filter.'")
-            shell("echo 'Did not filter by blacklist.' >> {output.filterLog}")
+            shell("echo 'Did not filter by blacklist.' >> {params.filterLog}")
+        shell("touch {output.blft}")
 
 ################################
 # filter by map quality (7)
 ################################
-'''
+
 rule filterBamWithMapQ:
     input:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam"
-        #inFile = conditionalExpand_1(MAPQ, 
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam", 
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam")
+        inFile = "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}.bam",
+        blft = "{sample}/{sample}_{sampleNum}_blftStep{blft,.*}.txt" # hardcode in input/output sequence in case of no filter
     output:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.bam",
-        #outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.bam",
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.bam",
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam",
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"),
-        filterLog = "{sample}/filtering.log"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}{qft,.*}.bam",
+        mapq = "{sample}/{sample}_{sampleNum}_mapqStep{blft,.*}{qft,.*}.txt" # hardcode in input/output sequence in case of no filter
     params:
-        mapq = MAPQ
+        mapq = MAPQ,
+        filterLog = "{sample}/filtering.log"
+    wildcard_constraints:
+        blft = '|'.join([re.escape(x) for x in ["", "blft"]]),
+        qft = '|'.join([re.escape(x) for x in ["", "qft"]])
     run:
-        if MAPQ > 0:
+        print('hi')
+        if params.mapq > 0:
             shell("echo 'sh02a_filter_bam.sh: Removing low quality reads'")
-            shell("samtools view -bh -f 0x2 -q {params.mapq} {input} -o {wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.blft}.qft.bam")
-            shell("echo 'Filtered with mapping quality filter {params.mapq}.' >> {output.filterLog}")
+            shell("samtools view -bh -f 0x2 -q {params.mapq} {input.inFile} -o {wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.blft}.qft.bam")
+            shell("echo 'Filtered with mapping quality filter {params.mapq}.' >> {params.filterLog}")
         else:
             shell("echo 'sh02a_filter_bam.sh: Mapping quality threshold not specified, quality filter skipped'")
-            shell("echo 'Did not filter by mapping quality.' >> {output.filterLog}")
+            shell("echo 'Did not filter by mapping quality.' >> {params.filterLog}")
+        shell("rm {input.blft}")
+        shell("touch {output.mapq}")
 
 ################################
 # histogram with duplicates (8)
 ################################
-
+'''
 rule histogramWithDuplicates_and_removeDuplicates:
     input:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}{qft,.*}.bam"
         #inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.bam",
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.bam",
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam",
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam")
     output:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.rmdup.bam",
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}{qft,.*}.rmdup.bam",
         #outFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.rmdup.bam",
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.rmdup.bam",
@@ -295,12 +300,15 @@ rule histogramWithDuplicates_and_removeDuplicates:
     params:
         blacklist = config['blacklist'],
         mapq = MAPQ
+    wildcard_constraints:
+        blft = '|'.join([re.escape(x) for x in ["", "blft"]]),
+        qft = '|'.join([re.escape(x) for x in ["", "qft"]])
     run:
         shell("echo 'Histogram with duplicates'")
         shell("picard CollectInsertSizeMetricCs I={input} O={output.histDupsLog} H={output.histDupsPDF} W=1000 STOP_AFTER=50000")
         # remove duplicates
         shell("echo 'sh02b_remove_dups_estimate_diversity.sh: Removing duplicates'")
-        shell("picard MarkDuplicates I={input} O={wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.bflt}{wildcards.qft}.rmdup.bam METRICS_FILE={output.dupsLog} REMOVE_DUPLICATES=true")
+        shell("picard MarkDuplicates I={input} O={wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_001.trim.st.all{wildcards.blft}{wildcards.qft}.rmdup.bam METRICS_FILE={output.dupsLog} REMOVE_DUPLICATES=true")
         #shell("samtools index {output.outFile}") # moved this down a rule bc it should operate on input not output
 
 ################################
@@ -309,7 +317,7 @@ rule histogramWithDuplicates_and_removeDuplicates:
 
 rule histogramWithNoDuplicates:
     input:
-        "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}{qft,.*}.rmdup.bam"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all{blft,.*}{qft,.*}.rmdup.bam"
         #inFile = conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.qft.rmdup.bam",
         #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.qft.rmdup.bam",
@@ -321,6 +329,9 @@ rule histogramWithNoDuplicates:
     params:
         blacklist = config['blacklist'],
         mapq = 30
+    wildcard_constraints:
+        blft = '|'.join([re.escape(x) for x in ["", "blft"]]),
+        qft = '|'.join([re.escape(x) for x in ["", "qft"]])
     run:
         shell("samtools index {input}")
         shell("echo 'Histogram without duplicates'")

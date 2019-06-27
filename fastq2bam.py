@@ -4,27 +4,30 @@
 import os
 import sys
 
-# initialize dictionary to store parameters
-keys = ['sampleText', 'fastqDir', 'genomeRef', 'blacklist', 'fastaRef']
 
-# MAKE INTO COMMAND LINE ARGS
-prompts = {
-    'fastqDir': 'global path to directory with fastq.gz files (all commands will be executed here): ',
-    'sampleText': 'global path to text file with sample names: ',
-    'genomeRef': 'global path to genome index  reference file (optional): ',
-    'blacklist': 'global path to the genome reference for chr sizes (optional): ',
-    'fastaRef' : 'global path to the FASTA genome reference file (optional): '
-}
+# parameters needed to insert as argruments to execute
+inputs = [
+    'core',
+    'fastqDir',
+    'sampleText',
+    'genomeRef',
+    'blacklist',
+    'fastaRef'
+]
 
 if __name__ == '__main__':
+    if len(sys.argv)-1 < 3:
+       print('need at least 3 arguments: how many cores, where the fastq files are (i.e. working directory), and a text file with the sample names of the fastq files (all on separate line)')
+       sys.exit(0)
     cores = sys.argv[1].strip()
-    print(cores)
-    # gather tags from standard output
+    # gather tags from arguments
     tags = ''
-    wd = ' ' + input(prompts["fastqDir"]).strip()
-    for i in keys:
-        if i != "fastqDir":
-            tags += ' ' + str(i) + '=' + input(prompts[i]).strip()
+    wd = ' ' + sys.argv[2].strip()
+    for i in range(2, len(inputs)):
+        if i < (len(sys.argv) - 1):
+            tags += ' ' + str(inputs[i]) + '=' + sys.argv[i+1].strip()
+        else:
+            tags += ' ' + str(inputs[i]) + "=''"
     # append fastqDir to set working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam') # CHANGE THIS TO FINAL EXECUTABLE DIR
     os.system('snakemake --cores ' + cores + ' --directory' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
