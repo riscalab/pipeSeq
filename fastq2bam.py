@@ -7,6 +7,7 @@ import sys
 # initialize dictionary to store parameters
 keys = ['sampleText', 'fastqDir', 'genomeRef', 'blacklist', 'fastaRef']
 
+# MAKE INTO COMMAND LINE ARGS
 prompts = {
     'fastqDir': 'global path to directory with fastq.gz files (all commands will be executed here): ',
     'sampleText': 'global path to text file with sample names: ',

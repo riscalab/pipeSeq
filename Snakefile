@@ -6,7 +6,6 @@
 ################################
 
 import os
-ruleorder: fastqQC_and_trimAdapters > unzipTrimforAlignment > alignInserts_and_fastqScreen
 
 # reassign the file to sample names to a list of the actual samples
 SAMPLES = []
@@ -19,6 +18,17 @@ with open(config['sampleText']) as ftp:
         SAMPLES.append(sample)
         sampleNum[sample] = str(cnt)
         cnt += 1
+
+# defaults for parameters
+if not os.path.exists(config['genomeRef']):
+    config['genomeRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
+
+if not os.path.exists(config['blacklist']):
+    config['blacklist'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+
+if not os.path.exists(config['fastaRef']):
+    config['fastaRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome.fa"
+
 
 # additional fastq file name variables like runs etc. 
 TAGS = ['_R1', '_R2', '_I1', '_I2'] 
@@ -82,8 +92,8 @@ rule all:
         customSeqFileExpand(TAGS, '.fastq.gz', True), # rule 1
         customSeqFileExpand(['_R1', '_R2'], '.trim.fastq.gz', True), # rule 2
         customSeqFileExpand([''], '.trim.bam', True), # rule 3
-        #customSeqFileExpand([''], '.trim.st.bam', True), # rule 4
-        #customSeqFileExpand([''], '.trim.st.all.bam', True), # rule 5
+        customSeqFileExpand([''], '.trim.st.bam', True), # rule 4
+        customSeqFileExpand([''], '.trim.st.all.bam', True), # rule 5
         #customSeqFileExpand([''],
         #    conditionalExpand_1(os.path.exists(config['blacklist']), 
         #        ".trim.st.all.blft.bam", 
@@ -129,25 +139,20 @@ rule fastqQC_and_trimAdapters:
     output:
         "{sample}/{sample}_{sampleNum}_R1_001_fastqc.html",
         "{sample}/{sample}_{sampleNum}_R2_001_fastqc.html",
-        "{sample}/{sample}_{sampleNum}_R1_001_fastqc.zip", # zip files for html
-        "{sample}/{sample}_{sampleNum}_R2_001_fastqc.zip", # zip file for html
+        "{sample}/{sample}_{sampleNum}_R1_001_fastqc.zip", 
+        "{sample}/{sample}_{sampleNum}_R2_001_fastqc.zip",
+        "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq",
+        "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq"
+    params:
         r1 = "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq.gz"
-    run:
-        shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
+    run: 
         shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
-        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_001.trim.fastq.gz {output.r1}")
-        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_001.trim.fastq.gz {output.r2}")
-
-
-
-rule unzipTrimforAlignment:
-    input:
-        "{sample}/{sample}_{sampleNum}_{tag}_001.trim.fastq.gz"
-    output:
-        "{sample}/{sample}_{sampleNum}_{tag}_001.trim.fastq"
-    shell:
-        "gunzip -f {input}"
+        shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_001.trim.fastq.gz {params.r1}")
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_001.trim.fastq.gz {params.r2}")
+        shell("gunzip {params.r1}")
+        shell("gunzip {params.r2}")
 
 ################################
 # align inserts and fastq screen (3)
@@ -160,6 +165,12 @@ rule alignInserts_and_fastqScreen:
     output:
         "{sample}/{sample}_{sampleNum}_R1_001.trim.fastq.gz",
         "{sample}/{sample}_{sampleNum}_R2_001.trim.fastq.gz",
+        "{sample}/{sample}_{sampleNum}_R1_001.trim_screen.html",
+        "{sample}/{sample}_{sampleNum}_R2_001.trim_screen.html",
+        "{sample}/{sample}_{sampleNum}_R1_001.trim_screen.png",
+        "{sample}/{sample}_{sampleNum}_R2_001.trim_screen.png",
+        "{sample}/{sample}_{sampleNum}_R1_001.trim_screen.txt",
+        "{sample}/{sample}_{sampleNum}_R2_001.trim_screen.txt",
         bam = "{sample}/{sample}_{sampleNum}_001.trim.bam",
         alignLog = "{sample}/{sample}_{sampleNum}_001.trim.alignlog"
     params:
@@ -167,11 +178,12 @@ rule alignInserts_and_fastqScreen:
         screen = "screen.log"
     run:
         shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
-        shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}")
-        shell("{params.screen}")
-        shell("gzip -f {input.unzip1}") # zip
-        shell("gzip -f {input.unzip2}") # zip
-"""
+        shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {params.screen} | mv {params.screen} {wildcards.sample}/") # OK LOOK HERE fastqc screen is weird... should i just add all genomes 
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_001.trim_screen.* {wildcards.sample}/")
+        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_001.trim_screen.* {wildcards.sample}/")
+        shell("gzip {input.unzip1}") # zip
+        shell("gzip {input.unzip2}") # zip
+
 ################################
 # sort bam files for filtering (4)
 ################################
@@ -181,8 +193,11 @@ rule sortBam:
         "{sample}/{sample}_{sampleNum}_001.trim.bam"
     output:
         "{sample}/{sample}_{sampleNum}_001.trim.st.bam"
+    params:
+        "{sample}_{sampleNum}_001.trim.st.bam"
     run:
-        shell("picard SortSam  I={input}  O={ouput}  SORT_ORDER=coordinate")
+        shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate")
+        shell("mv {params} {output}")
 
 ################################
 # bam filtering with samtools (5)
@@ -192,16 +207,15 @@ rule filterBam:
     input:
         "{sample}/{sample}_{sampleNum}_001.trim.st.bam"
     output:
-        allBam = "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam",
-        filterLog = "{sample}/filtering.log"
+        "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"
     params:
-        #chrs = "`samtools view -H *.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2`"
+        chrs = "samtools view -H *.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
+        filterLog = "filtering.log"
     run:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
-        shell("samtools view -b {input} `echo {params.chrs}` > {output.allBam}")
-        shell("echo 'Filtering file {input} by script sh02a_filter_bam.sh' >> {output.filterLog}")
-
+        shell("samtools view -b {input} `echo {params.chrs}` > {output}")
+        shell("echo 'Filtering file {input} by script sh02a_filter_bam.sh' >> {params.filterLog} | mv {params.filterLog} {wildcards.sample}/")
 
 ################################
 # filter by blacklists (6)
@@ -212,9 +226,6 @@ rule filterBamWithBlacklist:
         "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"
     output:
         "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam",
-        #outFile = conditionalExpand_1(os.path.exists(config['blacklist']), 
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.blft.bam", 
-        #    "{sample}/{sample}_{sampleNum}_001.trim.st.all.bam"),
         filterLog = "{sample}/filtering.log"
     params:
         blacklist = config['blacklist']
@@ -232,7 +243,7 @@ rule filterBamWithBlacklist:
 ################################
 # filter by map quality (7)
 ################################
-
+'''
 rule filterBamWithMapQ:
     input:
         "{sample}/{sample}_{sampleNum}_001.trim.st.all{bflt,.*}.bam"
@@ -325,4 +336,4 @@ rule cleanUp:
          "{sample}/hist_data_withoutdups.log"
     output:
         "{sample}/00_source/"
-"""
+'''
