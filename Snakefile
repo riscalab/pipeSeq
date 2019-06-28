@@ -17,19 +17,17 @@ with open(config['sampleText']) as ftp:
         SAMPLES.append(sample[0])
         sampleNum[sample[0]] = str(sample[1])
 
-# defaults for parameters
-if not os.path.exists(config['genomeRef']):
-    config['genomeRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
+# defaults for parameters set in fastq2bam.py exectuable file
 
+# check to see if blacklist file exists
 if not os.path.exists(config['blacklist']):
-    config['blacklist'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
-    #config['blacklist'] = ""
+    config['blacklist'] = ""
 
-if not os.path.exists(config['fastaRef']):
-    config['fastaRef'] = "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome.fa"
-
-# additional fastq file name variables like runs etc. 
-TAGS = ['_R1', '_R2', '_I1', '_I2'] 
+# determine if there are index fastq files
+if config['index'] == 'True':
+    TAGS = ['_R1', '_R2', '_I1', '_I2'] 
+else:
+    TAGS = ['_R1', '_R2'] 
 
 # customized expand function to be compatible with a python dictionary
 def customSeqFileExpand(iden, ext, wd = False): # enter wildcards argument if it starts working
@@ -42,7 +40,7 @@ def customSeqFileExpand(iden, ext, wd = False): # enter wildcards argument if it
             primer = ''
         # create files
         for i in iden:
-            ftp = primer + sample + '_S' + sampleNum[sample] + i + '_001' + ext 
+            ftp = primer + sample + '_S' + sampleNum[sample] + i + '_' + config['set'] + ext 
             strout.append(ftp)
     return strout
 
@@ -64,18 +62,15 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
 wildcard_constraints:
     set = "\d+"
 
-# map quality
-MAPQ = 30 # maybe make this a prompt at somepoint.. but for now, this is fine
-
 ################################
 # pipeline output check
 ################################
 
 rule all:
     input:
-        customSeqFileExpand(TAGS, '.fastq.gz'),
+        customSeqFileExpand(TAGS, '.fastq.gz', True),
         customSeqFileExpand([''],
-            conditionalExpand_2(MAPQ, os.path.exists(config['blacklist']),
+            conditionalExpand_2(config['mapq'], os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft.rmdup.bam",
                 ".trim.st.all.qft.rmdup.bam",
                 ".trim.st.all.blft.rmdup.bam",
@@ -130,7 +125,7 @@ rule fastqQC:
         r1 = "{sample}/{sample}_{sampleNum}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sampleNum}_R2_{set}.trim.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sampleNum}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", ".fastqc.zip", ".fastq"])
+        expand("{{sample}}/{{sample}}_{{sampleNum}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"])
     params:
         r1 = "{sample}/{sample}_{sampleNum}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sampleNum}_R2_{set}.trim.fastq.gz"
@@ -140,7 +135,7 @@ rule fastqQC:
         shell("gunzip {params.r2}")
 
 ################################
-# align inserts and fastq screen (2)
+# align inserts and fastq screen (3)
 ################################
 
 rule alignInserts_and_fastqScreen:
@@ -164,7 +159,7 @@ rule alignInserts_and_fastqScreen:
         shell("gzip {input.unzip2}") # zip
 
 ################################
-# sort bam files for filtering (3)
+# sort bam files for filtering (4)
 ################################
 
 rule sortBam:
@@ -179,7 +174,7 @@ rule sortBam:
         shell("mv {params} {output}")
 
 ################################
-# bam filtering with samtools (4)
+# bam filtering with samtools (5)
 ################################
 
 rule filterBam:
@@ -188,7 +183,7 @@ rule filterBam:
     output:
         "{sample}/{sample}_{sampleNum}_{set}.trim.st.all.bam"
     params:
-        chrs = "samtools view -H *.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
+        chrs = "samtools view -H {sample}/{sample}_{sampleNum}_{set}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
         filterLog = "filtering.log"
     run:
         shell("samtools index {input}")
@@ -198,7 +193,7 @@ rule filterBam:
         shell("mv {params.filterLog} {wildcards.sample}/")
 
 ################################
-# filter and remove duplicates (5)
+# filter and remove duplicates (6)
 ################################
 
 rule filter_and_removeDuplicates:
@@ -208,7 +203,7 @@ rule filter_and_removeDuplicates:
         "{sample}/{sample}_{sampleNum}_{set}.{ext}.rmdup.bam"
     params:
         blacklist = config['blacklist'],
-        mapq = MAPQ,
+        mapq = int(config['mapq']),
         filterLog = "{sample}/filtering.log",
         histDupsLog = "{sample}/hist_data_withdups.log",
         histDupsPDF = "{sample}/hist_graphwithdups.pdf",
