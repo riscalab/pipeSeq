@@ -51,7 +51,7 @@ if __name__ == '__main__':
        sys.exit(0)
     cores = sys.argv[1]
     # gather tags from arguments
-    wd = ' ' + sys.argv[2].strip()
+    wd = ' ' + sys.argv[2]
     tags = ' ' + inputs[2] + '=' + sys.argv[3]
     # add index tag
     tags += addedTags
