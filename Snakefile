@@ -211,10 +211,11 @@ rule filter_and_removeDuplicates:
     run:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
-            shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads")
+            shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads'")
             shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > {wildcards.sample}_temp.bam") # produces temp file
             ftp = "{wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_{wildcards.set}.trim.st.all.blft.bam"
             shell("samtools view -bh -f 0x2 {wildcards.sample}_temp.bam -o " + ftp)
+            shell("rm {wildcards.sample}_temp.bam") # remove temp file
             shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {params.filterLog}")
         else:
             ftp = input

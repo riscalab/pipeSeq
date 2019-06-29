@@ -30,7 +30,10 @@ optTags = {
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
     # whether there are fastq files for the index reads or not
-    '--index': 'True'
+    '--index': 'True',
+    # any snakemake flags for compilation (string, i.e. unlock)
+    '--snakemake': '', 
+   
 }
 
 if __name__ == '__main__':
@@ -42,7 +45,10 @@ if __name__ == '__main__':
             addedTags += " '" + tag[2:] + '="' + optTags[tag] + '"' + "'"
         else:
             tempFlag = tempTag[1].split(' ')[1]
-            addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
+            if tag == "--snakemake":
+                addedTags += " --" + tempFlag
+            else:
+                addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
     if len(sys.argv)-1 < 3:
        print('need at least 3 arguments: how many cores, where the fastq files are (i.e. working directory), and a text file with the sample names of the fastq files (all on separate line)')
        sys.exit(0)
@@ -54,6 +60,6 @@ if __name__ == '__main__':
     tags += addedTags
     # append fastqDir to set working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --cores ' + cores + ' --directory ' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
+    os.system('snakemake --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
