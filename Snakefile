@@ -6,6 +6,7 @@
 ################################
 
 import os
+import sys
 
 # reassign the file of sample names to a list of the actual samples
 SAMPLES = []
@@ -76,6 +77,7 @@ rule all:
         print('\n###########################')
         print('fastq2bam pipeline complete')
         print('\n###########################')
+        summaryStats()
         # will sadly have to loop through to clean instead of using fun asterisks
         for s in SAMPLES:
             #shell("mv " + s +"/*.chrM.bam " + s + "/00_source/") # this usually does not exist
@@ -147,8 +149,8 @@ rule alignInserts_and_fastqScreen:
         screen = "screen.log", 
     run:
         shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
-        shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {params.screen}")
-        shell("mv {params.screen} {wildcards.sample}/")
+        shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {wildcards.sample}_{params.screen}")
+        shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
         shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_{wildcards.set}.trim_screen.* {wildcards.sample}/")
         shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_{wildcards.set}.trim_screen.* {wildcards.sample}/")
         shell("gzip {input.unzip1}") # zip
@@ -185,8 +187,8 @@ rule filterBam:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
         shell("samtools view -b {input} `echo {params.chrs}` > {output}")
-        shell("echo 'Filtering file {input} by script sh02a_filter_bam.sh' >> {params.filterLog}")
-        shell("mv {params.filterLog} {wildcards.sample}/")
+        shell("echo 'Filtering file {input} by script sh02a_filter_bam.sh' >> {wildcards.sample}_{params.filterLog}")
+        shell("mv {wildcards.sample}_{params.filterLog} {wildcards.sample}/{params.filterLog}")
 
 ################################
 # filter and remove duplicates (6)
@@ -210,9 +212,9 @@ rule filter_and_removeDuplicates:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
             shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads")
-            shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > temp.bam") # produces temp file
+            shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > {wildcards.sample}_temp.bam") # produces temp file
             ftp = "{wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_{wildcards.set}.trim.st.all.blft.bam"
-            shell("samtools view -bh -f 0x2 temp.bam -o " + ftp)
+            shell("samtools view -bh -f 0x2 {wildcards.sample}_temp.bam -o " + ftp)
             shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {params.filterLog}")
         else:
             ftp = input
@@ -243,3 +245,27 @@ rule filter_and_removeDuplicates:
         # make cleanup directory
         shell("mkdir {wildcards.sample}/00_source")
 
+################################
+# clean up and summary (7)
+################################
+
+# this is executed in the rule all run sequence
+
+def summaryStats():
+    with open("runSummary.txt", "w") as f: 
+        f.write("SOFTWARE\n")
+        f.write("########\n")
+        f.write("python version: " + str(sys.version_info[0]) + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
+        f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
+        f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
+        f.write("picard version: 2.20.2-SNAPSHOT" + '\n') #os.popen("picard SortSam --version").read() + '\n')
+        f.write("bedtools version: " + os.popen("bedtools --version").read() + '\n')
+        f.write("\n\n")
+        f.write("PARAMETERS" + '\n')
+        f.write("##########\n")
+        f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
+        f.write("blacklist for filtering: " + config["blacklist"] + '\n')
+        f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
+        f.write("fasta reference: " + config["fastaRef"] + '\n')

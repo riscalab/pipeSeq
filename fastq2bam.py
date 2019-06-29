@@ -1,4 +1,4 @@
-#! /bin/bash python3
+#! /bin/env python
 # npagane | 190618 | risca lab | execute fastq2bam pipeline remotely
 
 import os
