@@ -1,4 +1,4 @@
-#! /bin/bash python3
+#! /bin/bash snakemake
 # npagane | 190618 | risca lab | snakefile for fastq2bam pipeline
 
 ################################
@@ -7,7 +7,7 @@
 
 import os
 
-# reassign the file to sample names to a list of the actual samples
+# reassign the file of sample names to a list of the actual samples
 SAMPLES = []
 with open(config['sampleText']) as ftp:
     lines = ftp.readlines()
@@ -19,10 +19,6 @@ with open(config['sampleText']) as ftp:
 
 # defaults for parameters set in fastq2bam.py exectuable file
 
-# check to see if blacklist file exists
-if not os.path.exists(config['blacklist']):
-    config['blacklist'] = ""
-
 # determine if there are index fastq files
 if config['index'] == 'True':
     TAGS = ['_R1', '_R2', '_I1', '_I2'] 
@@ -30,10 +26,10 @@ else:
     TAGS = ['_R1', '_R2'] 
 
 # customized expand function to be compatible with a python dictionary
-def customSeqFileExpand(iden, ext, wd = False): # enter wildcards argument if it starts working
+def customSeqFileExpand(iden, ext, wd = False): 
     strout = []
     for sample in SAMPLES:
-        # see if just the name of the files or with the sample directories
+        # check to prepend with sample directory
         if wd:
             primer = sample + '/'
         else:

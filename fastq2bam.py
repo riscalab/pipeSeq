@@ -33,9 +33,6 @@ optTags = {
     '--index': 'True'
 }
 
-# to specify that there are no index reads use the flag "--noIndex" 
-# the default assumes that there are index fastq files
-
 if __name__ == '__main__':
     # look for optional tags
     addedTags = ''
@@ -51,12 +48,12 @@ if __name__ == '__main__':
        sys.exit(0)
     cores = sys.argv[1]
     # gather tags from arguments
-    wd = ' ' + sys.argv[2]
+    wd = sys.argv[2]
     tags = ' ' + inputs[2] + '=' + sys.argv[3]
-    # add index tag
+    # add any optional tags
     tags += addedTags
     # append fastqDir to set working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --cores ' + cores + ' --directory' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
+    os.system('snakemake --cores ' + cores + ' --directory ' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
