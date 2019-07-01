@@ -7,6 +7,7 @@
 
 import os
 import sys
+import datetime
 
 # reassign the file of sample names to a list of the actual samples
 SAMPLES = []
@@ -72,17 +73,12 @@ rule all:
                 ".trim.st.all.qft.rmdup.bam",
                 ".trim.st.all.blft.rmdup.bam",
                 ".trim.st.all.rmdup.bam"),
-            True), # rule 7
+            True)
     run:
         print('\n###########################')
         print('fastq2bam pipeline complete')
         print('\n###########################')
         summaryStats()
-        # will sadly have to loop through to clean instead of using fun asterisks
-        for s in SAMPLES:
-            #shell("mv " + s +"/*.chrM.bam " + s + "/00_source/") # this usually does not exist
-            shell("mv " + s +"/*.all.bam " + s + "/00_source/")
-            shell("mv " + s +"/*.st.bam.bai " + s + "/00_source/") # am not moving rmdup files
 
 ################################
 # organize sample directories (0)
@@ -243,8 +239,10 @@ rule filter_and_removeDuplicates:
         shell("samtools index " + ftp)
         shell("echo 'Histogram without duplicates'")
         shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=1000 STOP_AFTER=50000")
-        # make cleanup directory
+        # cleanup directory
         shell("mkdir {wildcards.sample}/00_source")
+        shell("mv {wildcards.sample}/*.all.bam {wildcards.sample}/00_source/")
+        shell("mv {wildcards.sample}/*.st.bam.bai {wildcards.sample}/00_source/") # am not moving rmdup files
 
 ################################
 # clean up and summary (7)
@@ -253,7 +251,11 @@ rule filter_and_removeDuplicates:
 # this is executed in the rule all run sequence
 
 def summaryStats():
-    with open("runSummary.txt", "w") as f: 
+    with open("runSummary.txt", "w") as f:
+        f.write("################################\n")
+        f.write('user: ' + os.environ.get('USER') + '\n')
+        f.write('date: ' + datetime.datetime.now().isoformat() + '\n')
+        f.write('pipeline: fastq2bam')
         f.write("SOFTWARE\n")
         f.write("########\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
@@ -269,4 +271,4 @@ def summaryStats():
         f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
         f.write("blacklist for filtering: " + config["blacklist"] + '\n')
         f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
-        f.write("fasta reference: " + config["fastaRef"] + '\n')
+        f.write("fasta reference: " + config["fastaRef"] + '\n\n')
