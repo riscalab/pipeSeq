@@ -1,5 +1,5 @@
 #! /bin/env python
-# npagane | 190618 | risca lab | execute ATACseq pipeline remotely
+# npagane | 190701 | risca lab | execute ATACseq pipeline remotely
 
 import os
 import sys
@@ -12,9 +12,7 @@ inputs = [
     # how many cores to run (integer, i.e. 14)
     'core',
     # directory with fastq files (string, i.e. path/to/fastq)
-    'fastqDir',
-    # text file with sample names with sample number next to it separated by a space (string, i.e. path/to/libs)    
-    'sampleText'
+    'fastqDir'
 ]
 
 # optional tags
@@ -35,6 +33,13 @@ optTags = {
 }
 
 if __name__ == '__main__':
+    # make sure user has specified number of cores and working directory
+    if len(sys.argv)-1 < 2:
+       print('need at least 2 arguments: how many cores to run pipeline and where the fastq files are (i.e. working directory)')
+       sys.exit(0)
+    # gather number of cores and working directory
+    cores = sys.argv[1]
+    wd = sys.argv[2]
     # look for optional tags
     addedTags = ''
     for tag in optTags.keys():
@@ -47,17 +52,10 @@ if __name__ == '__main__':
                 addedTags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    if len(sys.argv)-1 < 3:
-       print('need at least 3 arguments: how many cores, where the fastq files are (i.e. working directory), and a text file with the sample names of the fastq files (all on separate line)')
-       sys.exit(0)
-    cores = sys.argv[1]
-    # gather tags from arguments
-    wd = sys.argv[2]
-    tags = ' ' + inputs[2] + '=' + sys.argv[3]
-    # add any optional tags
-    tags += addedTags
-    # append fastqDir to set working directory
+    # additionally pass in the working directory as part of the config for further reference for subworkflows
+    addedTags += ' ' + 'wd=' + wd
+    # make fastqDir the working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/ATACseq') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --use-conda --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + tags) # CLUSTER CONFIGS HERE
+    os.system('snakemake --use-conda --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags) # CLUSTER CONFIGS HERE
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')

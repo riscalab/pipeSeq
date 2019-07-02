@@ -1,27 +1,27 @@
 #! /bin/bash snakemake
 # npagane | 190701 | risca lab | snakefile for ATACseq pipeline
 
-################################
-# parameters and functions
-################################
-
 import os
 import sys
 import datetime
 
-# reassign the file of sample names to a list of the actual samples
-SAMPLES = []
-with open(config['sampleText']) as ftp:
-    lines = ftp.readlines()
-    sampleNum = {}
-    for line in lines:
-        sample = line.strip().split(' ')
-        SAMPLES.append(sample[0])
-        sampleNum[sample[0]] = str(sample[1])
+################################
+# parameters and functions
+################################
 
 # defaults for parameters set in ATACseq.py exectuable file
 
-# customized expand function to be compatible with a python dictionary
+# determine sample names and sample numbers from the working directory
+SAMPLES = []
+SAMPLE_NUMS = {}
+for base, dirs, files in os.walk("."):
+    for fastq in files:
+        if fastq.endswith(".fastq.gz") and not fastq.startswith("Undetermined"): # is zipped fastq but NOT undetermined
+            tmp = fastq.split(".fastq.gz")[0].split('_')
+            SAMPLES.append(tmp[0])
+            SAMPLE_NUMS[tmp[0]] = tmp[1]
+
+# generate strucutre of expected files 
 def customSeqFileExpand(iden, ext, wd = False): 
     strout = []
     for sample in SAMPLES:
@@ -32,7 +32,7 @@ def customSeqFileExpand(iden, ext, wd = False):
             primer = ''
         # create files
         for i in iden:
-            ftp = primer + sample + '_S' + sampleNum[sample] + i + '_' + config['set'] + ext 
+            ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
             strout.append(ftp)
     return strout
 
@@ -77,7 +77,8 @@ rule all:
 # run fastq2bam
 ################################
 
-subworkflow otherworkflow:
+subworkflow fastq2bam:
+    workdir: config["wd"]
     snakefile: "../fastq2bam/Snakefile"
 
 ################################
@@ -86,13 +87,15 @@ subworkflow otherworkflow:
 
 rule callPeaks:
     input:
-        otherworkflow("{sample}/{sample}_{sampleNum}_{set}.{ext}.rmdup.bam")
+        fastq2bam("{sample}/{sample}_{sampleNum}_{set}.{ext}.rmdup.bam")
     output:
         expand("{{sample}}/peakCalls_singles/{{sample}}_{{sampleNum}}_{{set}}.{{ext}}{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak"])
     params:
         "{sample}/peakCalls_singles/{sample}_{sampleNum}_{set}.{ext}"
     conda:
-        "envs/ATACseq.yml"
+        "envs/ATACseq.yml" # path relative to snakefile, not working directory
+    benchmark:
+        "benchmarks/{sample}_{sampleNum}_{set}.{ext}.callPeaks.txt"
     shell:
         "echo 'Calling Peaks...'; macs2 callpeak --nomodel -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000"
 
@@ -103,7 +106,7 @@ rule callPeaks:
 # this is executed in the rule all run sequence
 
 def summaryStats():
-    with open("ATACseqSummary.txt", "w") as f: 
+    with open("ATACseqRunSummary.log", "w") as f: 
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
@@ -115,3 +118,4 @@ def summaryStats():
         f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
         f.write("blacklist for filtering: " + config["blacklist"] + '\n')
         f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
+        f.write("peak call command: macs2 callpeak --nomodel -t {input} -n {output} --nolambda --keep-dup all --call-summits --slocal 10000")
