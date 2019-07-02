@@ -1,25 +1,25 @@
 #! /bin/bash snakemake
 # npagane | 190618 | risca lab | snakefile for fastq2bam pipeline
 
-################################
-# parameters and functions
-################################
-
 import os
 import sys
 import datetime
 
-# reassign the file of sample names to a list of the actual samples
-SAMPLES = []
-with open(config['sampleText']) as ftp:
-    lines = ftp.readlines()
-    sampleNum = {}
-    for line in lines:
-        sample = line.strip().split(' ')
-        SAMPLES.append(sample[0])
-        sampleNum[sample[0]] = str(sample[1])
+################################
+# parameters and functions
+################################
 
 # defaults for parameters set in fastq2bam.py exectuable file
+
+# determine sample names and sample numbers from the working directory
+SAMPLES = []
+SAMPLE_NUMS = {}
+for base, dirs, files in os.walk("."):
+    for fastq in files:
+        if fastq.endswith(".fastq.gz"):
+            tmp = fastq.split(".fastq.gz")[0].split('_')
+            SAMPLES.append(tmp[0])
+            SAMPLE_NUMS[tmp[0]] = tmp[1]
 
 # determine if there are index fastq files
 if config['index'] == 'True':
@@ -27,7 +27,7 @@ if config['index'] == 'True':
 else:
     TAGS = ['_R1', '_R2'] 
 
-# customized expand function to be compatible with a python dictionary
+# generate strucutre of expected files 
 def customSeqFileExpand(iden, ext, wd = False): 
     strout = []
     for sample in SAMPLES:
@@ -38,7 +38,7 @@ def customSeqFileExpand(iden, ext, wd = False):
             primer = ''
         # create files
         for i in iden:
-            ftp = primer + sample + '_S' + sampleNum[sample] + i + '_' + config['set'] + ext 
+            ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
             strout.append(ftp)
     return strout
 
@@ -86,9 +86,9 @@ rule all:
 
 rule createSampleDirectories:
     input:
-        "{sample}_{sampleNum}_{tag}_{set}.fastq.gz"
+        "{sample}_{sample_num}_{tag}_{set}.fastq.gz"
     output:
-        "{sample}/{sample}_{sampleNum}_{tag}_{set}.fastq.gz"
+        "{sample}/{sample}_{sample_num}_{tag}_{set}.fastq.gz"
     shell:
         "mv {input} {output}"
 
@@ -98,13 +98,15 @@ rule createSampleDirectories:
 
 rule trimAdapters:
     input:
-        r1 = "{sample}/{sample}_{sampleNum}_R1_{set}.fastq.gz",
-        r2 = "{sample}/{sample}_{sampleNum}_R2_{set}.fastq.gz"
+        r1 = "{sample}/{sample}_{sample_num}_R1_{set}.fastq.gz",
+        r2 = "{sample}/{sample}_{sample_num}_R2_{set}.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sampleNum}}_{run}_{{set}}.trim.fastq.gz", run=["R1", "R2"])
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim.fastq.gz", run=["R1", "R2"])
     params:
-        r1 = "{sample}_{sampleNum}_R1_{set}.trim.fastq.gz",
-        r2 = "{sample}_{sampleNum}_R2_{set}.trim.fastq.gz"
+        r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
     run:
         shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
         shell("mv {params.r1} {wildcards.sample}/")
@@ -116,13 +118,15 @@ rule trimAdapters:
 
 rule fastqQC:
     input:
-        r1 = "{sample}/{sample}_{sampleNum}_R1_{set}.trim.fastq.gz",
-        r2 = "{sample}/{sample}_{sampleNum}_R2_{set}.trim.fastq.gz"
+        r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sampleNum}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"])
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"])
     params:
-        r1 = "{sample}/{sample}_{sampleNum}_R1_{set}.trim.fastq.gz",
-        r2 = "{sample}/{sample}_{sampleNum}_R2_{set}.trim.fastq.gz"
+        r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
     run: 
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
         shell("gunzip {params.r1}")
@@ -134,21 +138,23 @@ rule fastqQC:
 
 rule alignInserts_and_fastqScreen:
     input:
-        unzip1 = "{sample}/{sample}_{sampleNum}_R1_{set}.trim.fastq",
-        unzip2 = "{sample}/{sample}_{sampleNum}_R2_{set}.trim.fastq"
+        unzip1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq",
+        unzip2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq"
     output:
-        expand("{{sample}}/{{sample}}_{{sampleNum}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_screen.html", "_screen.png", "_screen.txt"]),
-        bam = "{sample}/{sample}_{sampleNum}_{set}.trim.bam",
-        alignLog = "{sample}/{sample}_{sampleNum}_{set}.trim.alignlog"
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_screen.html", "_screen.png", "_screen.txt"]),
+        bam = "{sample}/{sample}_{sample_num}_{set}.trim.bam",
+        alignLog = "{sample}/{sample}_{sample_num}_{set}.trim.alignlog"
     params:
         ref = config['genomeRef'],
-        screen = "screen.log", 
+        screen = "screen.log"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.alignInserts_and_fastqScreen.txt"
     run:
         shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {wildcards.sample}_{params.screen}")
         shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
-        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R1_{wildcards.set}.trim_screen.* {wildcards.sample}/")
-        shell("mv {wildcards.sample}_{wildcards.sampleNum}_R2_{wildcards.set}.trim_screen.* {wildcards.sample}/")
+        shell("mv {wildcards.sample}_{wildcards.sample_num}_R1_{wildcards.set}.trim_screen.* {wildcards.sample}/")
+        shell("mv {wildcards.sample}_{wildcards.sample_num}_R2_{wildcards.set}.trim_screen.* {wildcards.sample}/")
         shell("gzip {input.unzip1}") # zip
         shell("gzip {input.unzip2}") # zip
 
@@ -158,11 +164,13 @@ rule alignInserts_and_fastqScreen:
 
 rule sortBam:
     input:
-        "{sample}/{sample}_{sampleNum}_{set}.trim.bam"
+        "{sample}/{sample}_{sample_num}_{set}.trim.bam"
     output:
-        "{sample}/{sample}_{sampleNum}_{set}.trim.st.bam"
+        "{sample}/{sample}_{sample_num}_{set}.trim.st.bam"
     params:
-        "{sample}_{sampleNum}_{set}.trim.st.bam"
+        "{sample}_{sample_num}_{set}.trim.st.bam"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.sortBam.txt"
     run:
         shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate")
         shell("mv {params} {output}")
@@ -173,12 +181,14 @@ rule sortBam:
 
 rule filterBam:
     input:
-        "{sample}/{sample}_{sampleNum}_{set}.trim.st.bam"
+        "{sample}/{sample}_{sample_num}_{set}.trim.st.bam"
     output:
-        "{sample}/{sample}_{sampleNum}_{set}.trim.st.all.bam"
+        "{sample}/{sample}_{sample_num}_{set}.trim.st.all.bam"
     params:
-        chrs = "samtools view -H {sample}/{sample}_{sampleNum}_{set}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
+        chrs = "samtools view -H {sample}/{sample}_{sample_num}_{set}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
         filterLog = "filtering.log"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.filterBam.txt"
     run:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
@@ -192,9 +202,9 @@ rule filterBam:
 
 rule filter_and_removeDuplicates:
     input:
-        "{sample}/{sample}_{sampleNum}_{set}.trim.st.all.bam"
+        "{sample}/{sample}_{sample_num}_{set}.trim.st.all.bam"
     output:
-        "{sample}/{sample}_{sampleNum}_{set}.{ext}.rmdup.bam"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.bam"
     params:
         blacklist = config['blacklist'],
         mapq = int(config['mapq']),
@@ -204,12 +214,14 @@ rule filter_and_removeDuplicates:
         dupsLog = "{sample}/dups.log",
         histNoDupsLog = "{sample}/hist_data_withoutdups.log",
         histNoDupsPDF = "{sample}/hist_graphwithoutdups.pdf"
+    benchmark:
+        "benchmarks/{sample}_{sample_num}_{set}.{ext}.filter_and_removeDuplicates.txt"
     run:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
             shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads'")
             shell("bedtools intersect -v -abam {input} -b {params.blacklist} -wa > {wildcards.sample}_temp.bam") # produces temp file
-            ftp = "{wildcards.sample}/{wildcards.sample}_{wildcards.sampleNum}_{wildcards.set}.trim.st.all.blft.bam"
+            ftp = "{wildcards.sample}/{wildcards.sample}_{wildcards.sample_num}_{wildcards.set}.trim.st.all.blft.bam"
             shell("samtools view -bh -f 0x2 {wildcards.sample}_temp.bam -o " + ftp)
             shell("rm {wildcards.sample}_temp.bam") # remove temp file
             shell("echo 'Blacklist filtered using file {params.blacklist}.' >> {params.filterLog}")
@@ -251,7 +263,7 @@ rule filter_and_removeDuplicates:
 # this is executed in the rule all run sequence
 
 def summaryStats():
-    with open("fastq2bamSummary.txt", "w") as f:
+    with open("fastq2bamRunSummary.log", "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
@@ -260,9 +272,8 @@ def summaryStats():
         f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
-        f.write("align command: (bowtie2 -p28 -x {genomeReference} -1 {input.R1} -2 {input.R2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
-        f.write("picard version: 2.20.2-SNAPSHOT" + '\n') #os.popen("picard SortSam --version").read() + '\n')
+        f.write("picard version: 2.20.2-SNAPSHOT" + '\n') # DONT LIKE THIS but the following wont work #+ os.popen("picard SortSam --version").read() + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read() + '\n')
         f.write("\n\n")
         f.write("PARAMETERS" + '\n')
@@ -270,3 +281,4 @@ def summaryStats():
         f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
         f.write("blacklist for filtering: " + config["blacklist"] + '\n')
         f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
+        f.write("align command: (bowtie2 -p28 -x {genomeReference} -1 {input.R1} -2 {input.R2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}" + '\n')

@@ -7,31 +7,24 @@ npagane | 190628 | risca lab
 to run
 ######
 
-python fastq2bam.py <1> <2> <3> --<opts>
+python fastq2bam.py <1> <2> --<opts>
 
 where:
     <1> =  how many cores to run pipeline with (integer, i.e. 14)
     <2> = directory with fastq files and desired working directory (string, i.e. path/to/fastq)
-    <3> = text file with sample names (separated by line) with sample number (separated by space) (string, i.e. path/to/libs)
-
-example of a <3> input file:
-    sampleName 1
-    sampleName 2
-    sampleName 3
-
---<opts> additional options:
-    --genomeRef = genome reference for alignment (string, i.e. path/to/genome)
-                  default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
-    --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
-                  default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
-    --fastaRef = fasta reference for the genome (string, i.e. path/to/fasta)
-              default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome.fa"
-    --set = the set number of the experiment (int, i.e. 001)
+    --<opts> additional options:
+        --genomeRef = genome reference for alignment (string, i.e. path/to/genome)
+            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
+        --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
+            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+        --set = the set number of the experiment (int, i.e. 001)
             default: "001"
-    --mapq = the map quality threshold for alignment (int, i.e. 30)
-             default: "30"
-    --index = whether there are fastq files for the index reads or not
-              default: "True"
+        --mapq = the map quality threshold for alignment (int, i.e. 30)
+            default: "30"
+        --index = whether there are fastq files for the index reads or not (boolean, i.e. True)
+            default: "True"
+        --snakemake = any snakemake flags for compilation (string, i.e. unlock)
+            default: ""
 
 ###########
 environment
