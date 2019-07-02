@@ -16,7 +16,7 @@ SAMPLES = []
 SAMPLE_NUMS = {}
 for base, dirs, files in os.walk("."):
     for fastq in files:
-        if fastq.endswith(".fastq.gz"):
+        if fastq.endswith(".fastq.gz") and not fastq.startswith("Undetermined"): # is zipped fastq but NOT undetermined
             tmp = fastq.split(".fastq.gz")[0].split('_')
             SAMPLES.append(tmp[0])
             SAMPLE_NUMS[tmp[0]] = tmp[1]

@@ -33,7 +33,7 @@ optTags = {
 }
 
 if __name__ == '__main__':
-    # make sure 
+    # make sure user has specified number of cores and working directory
     if len(sys.argv)-1 < 2:
        print('need at least 2 arguments: how many cores to run pipeline and where the fastq files are (i.e. working directory)')
        sys.exit(0)
@@ -52,8 +52,9 @@ if __name__ == '__main__':
                 addedTags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    # append fastqDir to set working directory
-    os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags) # CLUSTER CONFIGS HERE
+    # set working directory to where the Snakefile is
+    os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam')
+    # execute snakemake in actual working directory and with proper configs
+    os.system('snakemake --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags)
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
