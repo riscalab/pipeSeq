@@ -23,8 +23,6 @@ optTags = {
     '--genomeRef': "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome",
     # blacklist for filtering (string, i.e. path/to/blacklist)
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
-    # fasta reference for the genome (string, i.e. path/to/fasta)
-    '--fastaRef': "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome.fa", 
     # the set number of the experiment (int, i.e. 001)
     '--set': '001', 
     # the map quality threshold for alignment (int, i.e. 30)

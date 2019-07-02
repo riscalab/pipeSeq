@@ -242,7 +242,7 @@ rule filter_and_removeDuplicates:
         # cleanup directory
         shell("mkdir {wildcards.sample}/00_source")
         shell("mv {wildcards.sample}/*.all.bam {wildcards.sample}/00_source/")
-        shell("mv {wildcards.sample}/*.st.bam.bai {wildcards.sample}/00_source/") # am not moving rmdup files
+        shell("mv {wildcards.sample}/*.st.bam.bai {wildcards.sample}/00_source/")
 
 ################################
 # clean up and summary (7)
@@ -251,17 +251,16 @@ rule filter_and_removeDuplicates:
 # this is executed in the rule all run sequence
 
 def summaryStats():
-    with open("runSummary.txt", "w") as f:
-        f.write("################################\n")
+    with open("fastq2bamSummary.txt", "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
-        f.write('date: ' + datetime.datetime.now().isoformat() + '\n')
-        f.write('pipeline: fastq2bam')
+        f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
+        f.write("align command: (bowtie2 -p28 -x {genomeReference} -1 {input.R1} -2 {input.R2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
         f.write("picard version: 2.20.2-SNAPSHOT" + '\n') #os.popen("picard SortSam --version").read() + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read() + '\n')
@@ -271,4 +270,3 @@ def summaryStats():
         f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
         f.write("blacklist for filtering: " + config["blacklist"] + '\n')
         f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
-        f.write("fasta reference: " + config["fastaRef"] + '\n\n')
