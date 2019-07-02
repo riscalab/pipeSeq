@@ -1,0 +1,4 @@
+Building DAG of jobs...
+MissingInputException in line 87 of /rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile:
+Missing input files for rule createSampleDirectories:
+LSATAC2S2-quiescent1_S2_R1_001.fastq.gz
