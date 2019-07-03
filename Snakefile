@@ -25,20 +25,14 @@ for base, dirs, files in os.walk("."):
 if config['index'] == 'True':
     TAGS = ['_R1', '_R2', '_I1', '_I2'] 
 else:
-    TAGS = ['_R1', '_R2'] 
+    TAGS = ['_R1', '_R2']
 
 # generate strucutre of expected files 
-def customSeqFileExpand(iden, ext, wd = False): 
+def customSeqFileExpand(iden, ext): 
     strout = []
     for sample in SAMPLES:
-        # check to prepend with sample directory
-        if wd:
-            primer = sample + '/'
-        else:
-            primer = ''
-        # create files
         for i in iden:
-            ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
+            ftp = sample + '/' + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
             strout.append(ftp)
     return strout
 
@@ -66,14 +60,15 @@ wildcard_constraints:
 
 rule all:
     input:
-        customSeqFileExpand(TAGS, '.fastq.gz', True),
+        customSeqFileExpand(TAGS, '.fastq.gz'), # move all files to sample dirs
         customSeqFileExpand([''],
-            conditionalExpand_2(config['mapq'], os.path.exists(config['blacklist']),
+            conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft.rmdup.bam",
                 ".trim.st.all.qft.rmdup.bam",
                 ".trim.st.all.blft.rmdup.bam",
-                ".trim.st.all.rmdup.bam"),
-            True)
+                ".trim.st.all.rmdup.bam"
+            ),
+        )
     run:
         print('\n###########################')
         print('fastq2bam pipeline complete')
@@ -105,12 +100,13 @@ rule trimAdapters:
     params:
         r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+    conda:
+        "envs/py2.yml" # path relative to snakefile, not working directory
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
-    run:
-        shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
-        shell("mv {params.r1} {wildcards.sample}/")
-        shell("mv {params.r2} {wildcards.sample}/")
+    shell:
+        "/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trim.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log" + 
+            " | mv {params.r1} {wildcards.sample} | mv {params.r2} {wildcards.sample}/"
 
 ################################
 # QC of fastq files (2)
@@ -121,16 +117,16 @@ rule fastqQC:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"])
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"]),
+        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" #ensure that files are completely unzipped
     params:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
-    run: 
+    run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
-        shell("gunzip {params.r1}")
-        shell("gunzip {params.r2}")
+        shell("gunzip {params.r1} {params.r2} | touch {output.check}")
 
 ################################
 # align inserts and fastq screen (3)
@@ -139,7 +135,8 @@ rule fastqQC:
 rule alignInserts_and_fastqScreen:
     input:
         unzip1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq",
-        unzip2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq"
+        unzip2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq",
+        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" # make sure that files are completely unzipped before alignment
     output:
         expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_screen.html", "_screen.png", "_screen.txt"]),
         bam = "{sample}/{sample}_{sample_num}_{set}.trim.bam",
@@ -150,13 +147,14 @@ rule alignInserts_and_fastqScreen:
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.alignInserts_and_fastqScreen.txt"
     run:
+        # remove check file
+        shell("rm {input.check}")
         shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {wildcards.sample}_{params.screen}")
         shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
         shell("mv {wildcards.sample}_{wildcards.sample_num}_R1_{wildcards.set}.trim_screen.* {wildcards.sample}/")
         shell("mv {wildcards.sample}_{wildcards.sample_num}_R2_{wildcards.set}.trim_screen.* {wildcards.sample}/")
-        shell("gzip {input.unzip1}") # zip
-        shell("gzip {input.unzip2}") # zip
+        shell("gzip {input.unzip1} {input.unzip2}") # zip
 
 ################################
 # sort bam files for filtering (4)
@@ -266,10 +264,11 @@ def summaryStats():
     with open("fastq2bamRunSummary.log", "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
+        f.write('env: fastq2bam\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        f.write("pyadapter_trim version: python2 compatible" + '\n') # must update whenever the conda env is intalled with new relevant pacakages
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
