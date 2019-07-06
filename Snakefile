@@ -22,14 +22,14 @@ for base, dirs, files in os.walk("."):
             SAMPLE_NUMS[tmp[0]] = tmp[1]
 
 # generate strucutre of expected files 
-def customSeqFileExpand(iden, ext, wd = False): 
+def customSeqFileExpand(iden, ext, peak = False): 
     strout = []
     for sample in SAMPLES:
         # check to prepend with sample directory
-        if wd:
+        if peak:
             primer = sample + '/peakCalls_singles/'
-        else:
-            primer = ''
+        else: 
+            primer = sample + '/'
         # create files
         for i in iden:
             ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
@@ -65,8 +65,9 @@ rule all:
                 ".trim.st.all.blft.qft_summits.bed",
                 ".trim.st.all.qft_summits.bed",
                 ".trim.st.all.blft_summits.bed",
-                ".trim.st.all_summits.bed"),
-            True), # rule 7
+                ".trim.st.all_summits.bed"
+                ),
+        True)
     run:
         print('\n###########################')
         print('ATAC-seq pipeline complete')
@@ -109,13 +110,21 @@ def summaryStats():
     with open("ATACseqRunSummary.log", "w") as f: 
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
+        f.write('env: fastq2bam\n')
         f.write("SOFTWARE\n")
-        f.write("########\n")
+        f.write("python version: " + str(sys.version_info[0]) + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
+        f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
+        f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
+        f.write("picard version: 2.20.2-SNAPSHOT" + '\n') # DONT LIKE THIS but the following wont work #+ os.popen("picard SortSam --version").read() + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read() + '\n')
+        f.write("macs2 version: 2.1.2 <in ATACseq.yml conda env>") # must update whenever ATACseq conda env updated with relevant necessary packages
         f.write("\n\n")
         f.write("PARAMETERS" + '\n')
         f.write("##########\n")
         f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
         f.write("blacklist for filtering: " + config["blacklist"] + '\n')
         f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
+        f.write("align command: (bowtie2 -p28 -x {genomeReference} -1 {input.R1} -2 {input.R2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}" + '\n')
         f.write("peak call command: macs2 callpeak --nomodel -t {input} -n {output} --nolambda --keep-dup all --call-summits --slocal 10000")

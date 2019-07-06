@@ -42,6 +42,8 @@ if __name__ == '__main__':
     wd = sys.argv[2]
     # look for optional tags
     addedTags = ''
+    # additionally pass in the working directory as part of the config for further reference for subworkflows
+    addedTags += " '" + 'wd="' + wd + '"' + "'"
     for tag in optTags.keys():
         tempTag = ' '.join(sys.argv).split(tag)
         if len(tempTag) == 1:
@@ -52,8 +54,6 @@ if __name__ == '__main__':
                 addedTags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    # additionally pass in the working directory as part of the config for further reference for subworkflows
-    addedTags += ' ' + 'wd=' + wd
     # make fastqDir the working directory
     os.chdir('/rugpfs/fs0/risc_lab/store/npagane/ATACseq') # CHANGE THIS TO FINAL EXECUTABLE DIR
     os.system('snakemake --use-conda --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags) # CLUSTER CONFIGS HERE
