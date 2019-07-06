@@ -100,13 +100,12 @@ rule trimAdapters:
     params:
         r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
-    conda:
-        "envs/py2.yml" # path relative to snakefile, not working directory
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
-    shell:
-        "/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trim.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log" + 
-            " | mv {params.r1} {wildcards.sample} | mv {params.r2} {wildcards.sample}/"
+    run:
+        shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
+        shell("mv {params.r1} {wildcards.sample}")
+        shell("mv {params.r2} {wildcards.sample}/")
 
 ################################
 # QC of fastq files (2)
@@ -118,7 +117,7 @@ rule fastqQC:
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     output:
         expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"]),
-        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" #ensure that files are completely unzipped
+        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" # make sure that files are completely unzipped before alignment
     params:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
@@ -126,7 +125,8 @@ rule fastqQC:
         "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
     run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
-        shell("gunzip {params.r1} {params.r2} | touch {output.check}")
+        shell("gunzip {params.r1} {params.r2}")
+        shell("touch {output.check}")
 
 ################################
 # align inserts and fastq screen (3)

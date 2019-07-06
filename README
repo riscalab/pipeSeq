@@ -33,7 +33,7 @@ environment
 conda activate fastq2bam
 
 to trim adapters, python 2 is required.
-	the py2.yml file contains the necessary packages (i.e. python 2 and levenhestein)
+	the py2_adapt_trim.yml file contains the necessary packages (i.e. python 2 and levenshtein)
 
 ##############
 file structure
