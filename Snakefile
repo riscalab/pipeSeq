@@ -60,7 +60,6 @@ wildcard_constraints:
 
 rule all:
     input:
-        customSeqFileExpand(TAGS, '.fastq.gz'), # move all files to sample dirs
         customSeqFileExpand([''],
             conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft.rmdup.bam",
@@ -93,19 +92,26 @@ rule createSampleDirectories:
 
 rule trimAdapters:
     input:
+        customSeqFileExpand(TAGS, '.fastq.gz'), # move all files to sample dirs
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim.fastq.gz", run=["R1", "R2"])
+        r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     params:
-        r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
-        r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+        r1 = "{sample}_{sample_num}_R1_{set}_trimmed.fq.gz",
+        r2 = "{sample}_{sample_num}_R2_{set}_trimmed.fq.gz",
+        log1 = "{sample}_{sample_num}_R1_{set}.fastq.gz_trimming_report.txt",
+        log2 = "{sample}_{sample_num}_R2_{set}.fastq.gz_trimming_report.txt"
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
     run:
-        shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
-        shell("mv {params.r1} {wildcards.sample}")
-        shell("mv {params.r2} {wildcards.sample}/")
+        shell("trim_galore -j 4 -q 0 --length 20 {input.r1}")
+        shell("trim_galore -j 4 -q 0 --length 20 {input.r2}")
+        shell("mv {params.r1} {output.r1}")
+        shell("mv {params.r2} {output.r2}")
+        shell("mv {params.log1} {wildcards.sample}/") # move log files
+        shell("mv {params.log2} {wildcards.sample}/") # move log files
 
 ################################
 # QC of fastq files (2)
@@ -125,7 +131,7 @@ rule fastqQC:
         "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
     run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
-        shell("gunzip {params.r1} {params.r2}")
+        shell("unpigz {params.r1} {params.r2}")
         shell("touch {output.check}")
 
 ################################
@@ -154,7 +160,7 @@ rule alignInserts_and_fastqScreen:
         shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
         shell("mv {wildcards.sample}_{wildcards.sample_num}_R1_{wildcards.set}.trim_screen.* {wildcards.sample}/")
         shell("mv {wildcards.sample}_{wildcards.sample_num}_R2_{wildcards.set}.trim_screen.* {wildcards.sample}/")
-        shell("gzip {input.unzip1} {input.unzip2}") # zip
+        shell("pigz {input.unzip1} {input.unzip2}") # zip
 
 ################################
 # sort bam files for filtering (4)
@@ -268,7 +274,8 @@ def summaryStats():
         f.write("SOFTWARE\n")
         f.write("########\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        f.write("pyadapter_trim version: python2 compatible" + '\n') # must update whenever the conda env is intalled with new relevant pacakages
+        #f.write("pyadapter_trim version: python2 compatible" + '\n') # must update whenever the conda env is intalled with new relevant pacakages
+        f.write("trim_galore: " + os.popen("trim_galore --v").read() + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
