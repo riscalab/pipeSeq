@@ -23,17 +23,16 @@ for base, dirs, files in os.walk("."):
 
 # determine if there are index fastq files
 if config['index'] == 'True':
-    TAGS = ['_R1', '_R2', '_I1', '_I2'] 
+    TAGS = ['R1', 'R2', 'I1', 'I2'] 
 else:
-    TAGS = ['_R1', '_R2']
+    TAGS = ['R1', 'R2']
 
 # generate strucutre of expected files 
-def customSeqFileExpand(iden, ext): 
+def customSeqFileExpand(ext): 
     strout = []
     for sample in SAMPLES:
-        for i in iden:
-            ftp = sample + '/' + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
-            strout.append(ftp)
+        ftp = sample + '/' + sample + '_' + SAMPLE_NUMS[sample] + '_' + config['set'] + ext 
+        strout.append(ftp)
     return strout
 
 # conditional expand function upon 2 conditions for inputs/output
@@ -60,7 +59,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        customSeqFileExpand([''],
+        customSeqFileExpand(
             conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft.rmdup.bam",
                 ".trim.st.all.qft.rmdup.bam",
@@ -92,22 +91,26 @@ rule createSampleDirectories:
 
 rule trimAdapters:
     input:
-        customSeqFileExpand(TAGS, '.fastq.gz'), # move all files to sample dirs
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{tag}_{{set}}.fastq.gz", tag=TAGS), # move all files to sample dirs
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.fastq.gz"
     output:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     params:
-        r1 = "{sample}_{sample_num}_R1_{set}_trimmed.fq.gz",
-        r2 = "{sample}_{sample_num}_R2_{set}_trimmed.fq.gz",
+        #r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        #r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+        r1 = "{sample}_{sample_num}_R1_{set}_val_1.fq.gz",
+        r2 = "{sample}_{sample_num}_R2_{set}_val_2.fq.gz",
         log1 = "{sample}_{sample_num}_R1_{set}.fastq.gz_trimming_report.txt",
         log2 = "{sample}_{sample_num}_R2_{set}.fastq.gz_trimming_report.txt"
     benchmark:
         "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
     run:
-        shell("trim_galore -j 4 -q 0 --length 20 {input.r1}")
-        shell("trim_galore -j 4 -q 0 --length 20 {input.r2}")
+        #shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
+        #shell("mv {params.r1} {wildcards.sample}/")
+        #shell("mv {params.r2} {wildcards.sample}/")
+        shell("trim_galore --paired -j 4 -q 0 --stringency 5 {input.r1} {input.r2}")
         shell("mv {params.r1} {output.r1}")
         shell("mv {params.r2} {output.r2}")
         shell("mv {params.log1} {wildcards.sample}/") # move log files
