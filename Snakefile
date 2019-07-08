@@ -22,7 +22,7 @@ for base, dirs, files in os.walk("."):
             SAMPLE_NUMS[tmp[0]] = tmp[1]
 
 # generate strucutre of expected files 
-def customSeqFileExpand(iden, ext, peak = False): 
+def customSeqFileExpand(ext, peak = False): 
     strout = []
     for sample in SAMPLES:
         # check to prepend with sample directory
@@ -31,9 +31,8 @@ def customSeqFileExpand(iden, ext, peak = False):
         else: 
             primer = sample + '/'
         # create files
-        for i in iden:
-            ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + i + '_' + config['set'] + ext 
-            strout.append(ftp)
+        ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + '_' + config['set'] + ext 
+        strout.append(ftp)
     return strout
 
 # conditional expand function upon 2 conditions for inputs/output
@@ -60,7 +59,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        customSeqFileExpand([''],
+        customSeqFileExpand(
             conditionalExpand_2(config['mapq'], os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft_summits.bed",
                 ".trim.st.all.qft_summits.bed",
@@ -113,7 +112,8 @@ def summaryStats():
         f.write('env: fastq2bam\n')
         f.write("SOFTWARE\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        #f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        f.write("trim_galore: " + os.popen("trim_galore --v").read() + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
