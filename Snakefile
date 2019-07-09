@@ -100,8 +100,6 @@ rule trimAdapters:
     params:
         r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
     run:
         shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
         shell("mv {params.r1} {wildcards.sample}/")
@@ -116,17 +114,13 @@ rule fastqQC:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     output:
-        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"]),
-        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" # make sure that files are completely unzipped before alignment
+        expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_fastqc.html", "_fastqc.zip", ".fastq"])
     params:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
     run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
         shell("unpigz {params.r1} {params.r2}")
-        shell("touch {output.check}")
 
 ################################
 # align inserts and fastq screen (3)
@@ -136,7 +130,6 @@ rule alignInserts_and_fastqScreen:
     input:
         unzip1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq",
         unzip2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq",
-        check = "{sample}/{sample}_{sample_num}_{set}_GUNZIP" # make sure that files are completely unzipped before alignment
     output:
         expand("{{sample}}/{{sample}}_{{sample_num}}_{run}_{{set}}.trim{end}", run=["R1", "R2"], end=["_screen.html", "_screen.png", "_screen.txt"]),
         bam = "{sample}/{sample}_{sample_num}_{set}.trim.bam",
@@ -144,11 +137,7 @@ rule alignInserts_and_fastqScreen:
     params:
         ref = config['genomeRef'],
         screen = "screen.log"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.alignInserts_and_fastqScreen.txt"
     run:
-        # remove check file
-        shell("rm {input.check}")
         shell("(bowtie2 -p28 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}")
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {wildcards.sample}_{params.screen}")
         shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
@@ -167,8 +156,6 @@ rule sortBam:
         "{sample}/{sample}_{sample_num}_{set}.trim.st.bam"
     params:
         "{sample}_{sample_num}_{set}.trim.st.bam"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.sortBam.txt"
     run:
         shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate")
         shell("mv {params} {output}")
@@ -185,8 +172,6 @@ rule filterBam:
     params:
         chrs = "samtools view -H {sample}/{sample}_{sample_num}_{set}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
         filterLog = "filtering.log"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.filterBam.txt"
     run:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
@@ -212,8 +197,6 @@ rule filter_and_removeDuplicates:
         dupsLog = "{sample}/dups.log",
         histNoDupsLog = "{sample}/hist_data_withoutdups.log",
         histNoDupsPDF = "{sample}/hist_graphwithoutdups.pdf"
-    #benchmark:
-    #    "benchmarks/{sample}_{sample_num}_{set}.{ext}.filter_and_removeDuplicates.txt"
     run:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
@@ -268,8 +251,7 @@ def summaryStats():
         f.write("SOFTWARE\n")
         f.write("########\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        #f.write("pyadapter_trim version: python2 compatible" + '\n') # must update whenever the conda env is intalled with new relevant pacakages
-        f.write("trim_galore: " + os.popen("trim_galore --v").read() + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
