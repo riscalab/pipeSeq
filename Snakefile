@@ -82,20 +82,32 @@ subworkflow fastq2bam:
     snakefile: "../fastq2bam/Snakefile"
 
 ################################
-# call peaks to make bed files
+# align at insertion center
 ################################
 
-rule callPeaks:
+rule ATACoffset:
     input:
-        fastq2bam("{sample}/{sample}_{sampleNum}_{set}.{ext}.rmdup.bam")
+        fastq2bam("{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.bam")
     output:
-        expand("{{sample}}/peakCalls_singles/{{sample}}_{{sampleNum}}_{{set}}.{{ext}}{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak"])
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bam"
     params:
-        "{sample}/peakCalls_singles/{sample}_{sampleNum}_{set}.{ext}"
+        ref = config['genomeRef']
+    run:
+        shell("bedtools bamtobed -i {input} | awk -F $'\t' 'BEGIN {OFS = FS}{ if ($6 == '+') {$2 = $2 + 4} else if ($6 == '-') {$3 = $3 - 5} print $0}' > {output}")
+
+################################
+# make bed files
+################################
+
+rule callPeaks_and_makeTracks:
+    input:
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bam"
+    output:
+        expand("{{sample}}/peakCalls_singles/{{sample}}_{{sample_num}}_{{set}}.{{ext}}.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak"])
+    params:
+        "{sample}/peakCalls_singles/{sample}_{sample_num}_{set}.{ext}.atac"
     conda:
         "envs/ATACseq.yml" # path relative to snakefile, not working directory
-    #benchmark:
-    #    "benchmarks/{sample}_{sampleNum}_{set}.{ext}.callPeaks.txt"
     shell:
         "echo 'Calling Peaks...'; macs2 callpeak --nomodel -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000"
 
