@@ -94,8 +94,8 @@ rule callPeaks:
         "{sample}/peakCalls_singles/{sample}_{sampleNum}_{set}.{ext}"
     conda:
         "envs/ATACseq.yml" # path relative to snakefile, not working directory
-    benchmark:
-        "benchmarks/{sample}_{sampleNum}_{set}.{ext}.callPeaks.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sampleNum}_{set}.{ext}.callPeaks.txt"
     shell:
         "echo 'Calling Peaks...'; macs2 callpeak --nomodel -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000"
 
@@ -112,8 +112,7 @@ def summaryStats():
         f.write('env: fastq2bam\n')
         f.write("SOFTWARE\n")
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        #f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
-        f.write("trim_galore: " + os.popen("trim_galore --v").read() + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read() + '\n')
