@@ -65,7 +65,7 @@ rule all:
                 ".trim.st.all.qft.rmdup.bam",
                 ".trim.st.all.blft.rmdup.bam",
                 ".trim.st.all.rmdup.bam"
-            ),
+            )
         )
     run:
         print('\n###########################')
@@ -98,23 +98,14 @@ rule trimAdapters:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
     params:
-        #r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
-        #r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
-        r1 = "{sample}_{sample_num}_R1_{set}_val_1.fq.gz",
-        r2 = "{sample}_{sample_num}_R2_{set}_val_2.fq.gz",
-        log1 = "{sample}_{sample_num}_R1_{set}.fastq.gz_trimming_report.txt",
-        log2 = "{sample}_{sample_num}_R2_{set}.fastq.gz_trimming_report.txt"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
+        r1 = "{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
+        r2 = "{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.trimAdapters.txt"
     run:
-        #shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
-        #shell("mv {params.r1} {wildcards.sample}/")
-        #shell("mv {params.r2} {wildcards.sample}/")
-        shell("trim_galore --paired -j 4 -q 0 --stringency 5 {input.r1} {input.r2}")
-        shell("mv {params.r1} {output.r1}")
-        shell("mv {params.r2} {output.r2}")
-        shell("mv {params.log1} {wildcards.sample}/") # move log files
-        shell("mv {params.log2} {wildcards.sample}/") # move log files
+        shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
+        shell("mv {params.r1} {wildcards.sample}/")
+        shell("mv {params.r2} {wildcards.sample}/")
 
 ################################
 # QC of fastq files (2)
@@ -130,8 +121,8 @@ rule fastqQC:
     params:
         r1 = "{sample}/{sample}_{sample_num}_R1_{set}.trim.fastq.gz",
         r2 = "{sample}/{sample}_{sample_num}_R2_{set}.trim.fastq.gz"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.fastqQC.txt"
     run:
         shell("fastqc -o {wildcards.sample} {input.r1} {input.r2}")
         shell("unpigz {params.r1} {params.r2}")
@@ -153,8 +144,8 @@ rule alignInserts_and_fastqScreen:
     params:
         ref = config['genomeRef'],
         screen = "screen.log"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.alignInserts_and_fastqScreen.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.alignInserts_and_fastqScreen.txt"
     run:
         # remove check file
         shell("rm {input.check}")
@@ -176,8 +167,8 @@ rule sortBam:
         "{sample}/{sample}_{sample_num}_{set}.trim.st.bam"
     params:
         "{sample}_{sample_num}_{set}.trim.st.bam"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.sortBam.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.sortBam.txt"
     run:
         shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate")
         shell("mv {params} {output}")
@@ -194,8 +185,8 @@ rule filterBam:
     params:
         chrs = "samtools view -H {sample}/{sample}_{sample_num}_{set}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
         filterLog = "filtering.log"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.filterBam.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.filterBam.txt"
     run:
         shell("samtools index {input}")
         shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
@@ -221,8 +212,8 @@ rule filter_and_removeDuplicates:
         dupsLog = "{sample}/dups.log",
         histNoDupsLog = "{sample}/hist_data_withoutdups.log",
         histNoDupsPDF = "{sample}/hist_graphwithoutdups.pdf"
-    benchmark:
-        "benchmarks/{sample}_{sample_num}_{set}.{ext}.filter_and_removeDuplicates.txt"
+    #benchmark:
+    #    "benchmarks/{sample}_{sample_num}_{set}.{ext}.filter_and_removeDuplicates.txt"
     run:
         # filter by blacklist if provided
         if os.path.exists(params.blacklist):
