@@ -17,12 +17,14 @@ inputs = [
 
 # optional tags
 optTags = {
-    # genome reference for alignment (string, i.e. path/to/genome.fa)
+    # genome reference for alignment (string, i.e. path/to/genome)
     '--genomeRef': "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome",
     # blacklist for filtering (string, i.e. path/to/blacklist)
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
-    # fasta reference 
-    
+    # sizes of chromosomes (string, i.e. path/to/genome/file)
+    '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/hg38.genome",
+    # commands for IGV to capture images to tracks
+    '--igvCommands': './scripts/igvCommands',
     # the set number of the experiment (int, i.e. 001)
     '--set': '001', 
     # the map quality threshold for alignment (int, i.e. 30)
