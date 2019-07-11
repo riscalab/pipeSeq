@@ -52,9 +52,9 @@ if __name__ == '__main__':
                 addedTags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    # set working directory to where the Snakefile is
-    os.chdir('/rugpfs/fs0/risc_lab/store/npagane/fastq2bam')
-    # execute snakemake in actual working directory and with proper configs
-    os.system('snakemake --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags)
+    # set working directory to project directory
+    os.chdir(wd)
+    # execute snakemake and pass to Snakefile with proper configs
+    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile --rerun-incomplete --cores ' + cores + ' --config' + addedTags)
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
