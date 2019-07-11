@@ -75,7 +75,7 @@ rule callPeakSummits:
     params:
         "{sample}/peakCalls_singles/{sample}_{sample_num}_{set}.{ext}.atac"
     conda:
-        "./../envs/macs2_python2.yml" # path relative to current file, not working directory
+        "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
         "echo 'Calling Peaks...'; macs2 callpeak --nomodel -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000; " +
         "touch {output.check}"

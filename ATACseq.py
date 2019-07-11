@@ -46,8 +46,6 @@ if __name__ == '__main__':
     wd = sys.argv[2]
     # look for optional tags
     addedTags = ''
-    # additionally pass in the working directory as part of the config for further reference for subworkflows
-    addedTags += " '" + 'wd="' + wd + '"' + "'"
     for tag in optTags.keys():
         tempTag = ' '.join(sys.argv).split(tag)
         if len(tempTag) == 1:
@@ -58,8 +56,9 @@ if __name__ == '__main__':
                 addedTags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    # make fastqDir the working directory
-    os.chdir('/rugpfs/fs0/risc_lab/store/npagane/ATACseq') # CHANGE THIS TO FINAL EXECUTABLE DIR
-    os.system('snakemake --use-conda --rerun-incomplete --cores ' + cores + ' --directory ' + wd + ' --config' + addedTags) # CLUSTER CONFIGS HERE
+    # set working directory to project directory
+    os.chdir(wd)
+    # execute snakemake and pass path to Snakefile with proper configs
+    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/npagane/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' --config' + addedTags) # CLUSTER CONFIGS HERE
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
