@@ -1,10 +1,6 @@
 #! /bin/bash snakemake
 # npagane | 190701 | risca lab | snakefile for ATACseq pipeline
 
-import os
-import sys
-import datetime
-
 ################################
 # pipeline output check
 ################################

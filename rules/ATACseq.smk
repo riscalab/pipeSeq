@@ -3,6 +3,10 @@
 
 # include this file to incororporate these rules into a Snakefile for execution
 
+import os
+import sys
+import datetime
+
 ################################
 # parameters and functions
 ################################
@@ -20,16 +24,10 @@ for base, dirs, files in os.walk("."):
             SAMPLE_NUMS[tmp[0]] = tmp[1]
 
 # generate strucutre of expected files 
-def customSeqFileExpand(ext): 
+def customFileExpand(ext): 
     strout = []
     for sample in SAMPLES:
-        # check to prepend with sample directory
-        if peak:
-            primer = sample + '/peakCalls_singles/'
-        else: 
-            primer = sample + '/'
-        # create files
-        ftp = primer + sample + '_' + SAMPLE_NUMS[sample] + '_' + config['set'] + ext 
+        ftp = sample + '/' + sample + '_' + SAMPLE_NUMS[sample] + '_' + config['set'] + ext 
         strout.append(ftp)
     return strout
 
@@ -57,10 +55,10 @@ wildcard_constraints:
 
 rule ATACoffset:
     input:
-        fastq2bam("fastq2bamRunSummary.log"), # ensure summary log
-        bam = fastq2bam("{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.bam")
+        "fastq2bamRunSummary.log", # ensure summary log
+        bam = "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.bam"
     output:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bam"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bam"
     run:
         shell("bedtools bamtobed -i {input.bam} | awk -F $'\t' 'BEGIN {OFS = FS}{ if ($6 == '+') {$2 = $2 + 4} else if ($6 == '-') {$3 = $3 - 5} print $0}' > {output}")
 
@@ -70,14 +68,14 @@ rule ATACoffset:
 
 rule callPeakSummits:
     input:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bam"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bam"
     output:
         expand("{{sample}}/peakCalls_singles/{{sample}}_{{sample_num}}_{{set}}.{{ext}}.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak"]),
         check = "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.CHECK"
     params:
         "{sample}/peakCalls_singles/{sample}_{sample_num}_{set}.{ext}.atac"
     conda:
-        "envs/macs2_python2.yml" # path relative to snakefile, not working directory
+        "./../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
         "echo 'Calling Peaks...'; macs2 callpeak --nomodel -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000; " +
         "touch {output.check}"
@@ -88,10 +86,10 @@ rule callPeakSummits:
 
 rule bam2bedGraph:
     input:
-        bam = "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bam",
+        bam = "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bam",
         check = "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.CHECK"
     output:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bedgraph"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bedgraph"
     run:
         shell("rm {input.check}")
         shell("bedtools genomecov -i {input.bam} -5 -bg > {output}")
@@ -103,9 +101,9 @@ rule bam2bedGraph:
 
 rule bedGraph2bigWig:
     input:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bedgraph"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bedgraph"
     output:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bw"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bw"
     params:
         chromSize = config['chromSize']
     run:
@@ -118,12 +116,12 @@ rule bedGraph2bigWig:
 
 rule visualize_and_analyzeBigWig:
     input:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bw"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bw"
     output:
-        "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.tab"
+        "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.tab"
     params: 
-        cmds = config['ivgCommands'],
-        bed = "{sample}/{sample}_{sample_num}_{set}.{ext}.atac.rmdup.bedgraph"
+        cmds = config['igvCommands'],
+        bed = "{sample}/{sample}_{sample_num}_{set}.{ext}.rmdup.atac.bedgraph"
     run:
         shell("printf 'load {input}\n" +
              "snapshotDirectory ./{wildcards.sample}/tracks\n';" +
@@ -139,12 +137,12 @@ rule visualize_and_analyzeBigWig:
 
 rule ATACseqSummary:
     input:
-        customSeqFileExpand(
+        customFileExpand(
             conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.atac.rmdup.tab",
-                ".trim.st.all.qft.atac.rmdup.tab",
-                ".trim.st.all.blft.atac.rmdup.tab",
-                ".trim.st.all.atac.rmdup.tab"
+                ".trim.st.all.blft.qft.rmdup.atac.tab",
+                ".trim.st.all.qft.rmdup.atac.tab",
+                ".trim.st.all.blft.rmdup.atac.tab",
+                ".trim.st.all.rmdup.atac.tab"
             )
         )
     output:

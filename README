@@ -1,5 +1,5 @@
 #########################################################################################
-ATACseq: run fastq2bam as subworkflow and call peaks
+ATACseq: analyze ATACseq bam files to call peaks and make tracks
 #########################################################################################
 npagane | 190702 | risca lab
 
@@ -17,6 +17,10 @@ where:
             default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
         --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+        --chromSize = sizes of chromosomes (string, i.e. path/to/genome/file)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/hg38.genome"
+        --igvCommands = commands for IGV to capture images to tracks (string, i.e. path/to/commands)
+            default: './scripts/igvCommands'
         --set = the set number of the experiment (int, i.e. 001)
             default: "001"
         --mapq = the map quality threshold for alignment (int, i.e. 30)
@@ -30,18 +34,22 @@ where:
 environment
 ###########
 
-conda activate fastq2bam
+start cluster submission file with:
+    source activate ATACseq
+    echo `which python` # confirms you are in correct env
 
-* uses ATACseq conda env in specific rules to avoid version clashes
-* the environment is saved in envs/ATACseq.yml using the command:
-	conda env export > ATACseq.yml
-** every time the conda env is updated, the yml file needs to be regenerated
+macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
+was created and exported via:
+    conda activate macs2_python2
+    conda env export >  macs2_python2.yml (in the conda directory i.e. /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/)
+the yml file is then symlinked to the envs/ directory
 
 ##############
 file structure
 ##############
 
 ATACseq.py <executable>
-Snakefile <pipeline>
-scripts/* <R and python scripts to call in pipeline>
-envs/* <stores conda environments for snakemake rules>
+Snakefile <constructs pipeline>
+rules/* <rules for executable pipeline>
+scripts/* <R, python, or bash scripts to call in pipeline>
+envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>

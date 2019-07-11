@@ -23,7 +23,7 @@ optTags = {
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
     # sizes of chromosomes (string, i.e. path/to/genome/file)
     '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/hg38.genome",
-    # commands for IGV to capture images to tracks
+    # commands for IGV to capture images to tracks (string, i.e. path/to/commands)
     '--igvCommands': './scripts/igvCommands',
     # the set number of the experiment (int, i.e. 001)
     '--set': '001', 
