@@ -3,9 +3,15 @@
 
 # include this file to incororporate these rules into a Snakefile for execution
 
+import os
+import sys
+import datetime
+
 ################################
 # parameters and functions
 ################################
+
+# defaults for parameters set in fastq2bam.py exectuable file
 
 # determine sample names and sample numbers from the working directory
 SAMPLES = []
@@ -18,7 +24,7 @@ for base, dirs, files in os.walk("."):
             SAMPLE_NUMS[tmp[0]] = tmp[1]
 
 # generate strucutre of expected files 
-def customSeqFileExpand(ext): 
+def customFileExpand(ext): 
     strout = []
     for sample in SAMPLES:
         ftp = sample + '/' + sample + '_' + SAMPLE_NUMS[sample] + '_' + config['set'] + ext 
@@ -219,7 +225,7 @@ rule filter_and_removeDuplicates:
 
 rule fastq2bamSummary:
     input:
-        customSeqFileExpand(
+        customFileExpand(
             conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                 ".trim.st.all.blft.qft.rmdup.bam",
                 ".trim.st.all.qft.rmdup.bam",
@@ -233,7 +239,7 @@ rule fastq2bamSummary:
         print('\n###########################')
         print('fastq2bam pipeline complete')
         print('\n###########################')
-        with open("{output}"}, "w") as f:
+        with open("{output}", "w") as f:
             f.write('user: ' + os.environ.get('USER') + '\n')
             f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
             f.write('env: fastq2bam\n')

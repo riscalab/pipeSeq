@@ -10,7 +10,7 @@ to run
 python fastq2bam.py <1> <2> --<opts>
 
 where:
-    <1> =  how many cores to run pipeline with (integer, i.e. 14)
+    <1> =  how many cores to run pipeline with (integer, i.e. 18)
     <2> = directory with fastq files and desired working directory (string, i.e. path/to/fastq)
     --<opts> additional options:
         --genomeRef = genome reference for alignment (string, i.e. path/to/genome)
@@ -30,16 +30,16 @@ where:
 environment
 ###########
 
-conda activate fastq2bam
-
-to trim adapters, python 2 is required.
-	the py2_adapt_trim.yml file contains the necessary packages (i.e. python 2 and levenshtein)
+start cluster submission file with:
+    source activate fastq2bam
+    echo `which python` # confirms you are in correct env
 
 ##############
 file structure
 ##############
 
 fastq2bam.py <executable>
-Snakefile <pipeline>
-scripts/* <R and python scripts to call in pipeline>
-envs/* <stores conda environments for snakemake rules>
+Snakefile <constructs pipeline>
+rules/* <rules for pipeline>
+scripts/* <R, python, or bash scripts to call in pipeline>
+envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>

@@ -1,10 +1,6 @@
 #! /bin/bash snakemake
 # npagane | 190618 | risca lab | snakefile for fastq2bam pipeline
 
-import os
-import sys
-import datetime
-
 ################################
 # pipeline output check
 ################################
