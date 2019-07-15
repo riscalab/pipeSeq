@@ -58,6 +58,6 @@ if __name__ == '__main__':
     # set working directory to project directory
     os.chdir(wd)
     # execute snakemake and pass path to Snakefile with proper configs
-    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/npagane/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' --config' + addedTags) 
+    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' --config' + addedTags) 
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
