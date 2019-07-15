@@ -1,0 +1,1 @@
+../../fastq2bam/rules/fastq2bam.smk
