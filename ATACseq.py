@@ -45,6 +45,7 @@ if __name__ == '__main__':
     wd = sys.argv[2]
     # look for optional tags
     addedTags = ''
+    snakeFlags = ''
     for tag in optTags.keys():
         tempTag = ' '.join(sys.argv).split(tag)
         if len(tempTag) == 1:
@@ -52,12 +53,12 @@ if __name__ == '__main__':
         else:
             tempFlag = tempTag[1].split(' ')[1]
             if tag == "--snakemake":
-                addedTags += " --" + tempFlag
+                snakeFlags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
     # set working directory to project directory
     os.chdir(wd)
     # execute snakemake and pass path to Snakefile with proper configs
-    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' --config' + addedTags) 
+    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' ' + snakeFlags + ' --config' + addedTags) 
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
