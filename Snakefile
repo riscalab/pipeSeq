@@ -1,5 +1,4 @@
 #! /bin/bash snakemake
-# npagane | 190618 | risca lab | snakefile for fastq2bam pipeline
 
 ################################
 # pipeline output check

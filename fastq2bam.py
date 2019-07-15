@@ -1,5 +1,4 @@
-#! /bin/env python
-# npagane | 190618 | risca lab | execute fastq2bam pipeline remotely
+# execute snakemake for fastq2bam
 
 import os
 import sys
@@ -21,12 +20,12 @@ optTags = {
     '--genomeRef': "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome",
     # blacklist for filtering (string, i.e. path/to/blacklist)
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
-    # the set number of the experiment (int, i.e. 001)
-    '--set': '001', 
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
     # whether there are fastq files for the index reads or not
-    '--index': 'True',
+    '--index': 'False',
+    # exclusion file to exclude certain samples from analysis
+    '--exclude': '',
     # any snakemake flags for compilation (string, i.e. unlock)
     '--snakemake': '', 
    
