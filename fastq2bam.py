@@ -54,6 +54,6 @@ if __name__ == '__main__':
     # set working directory to project directory
     os.chdir(wd)
     # execute snakemake and pass to Snakefile with proper configs
-    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/npagane/fastq2bam/Snakefile --rerun-incomplete --cores ' + cores + ' --config' + addedTags)
+    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam/Snakefile --rerun-incomplete --cores ' + cores + ' --config' + addedTags)
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')
