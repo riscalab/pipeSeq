@@ -18,15 +18,15 @@ where:
         --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
         --chromSize = sizes of chromosomes (string, i.e. path/to/genome/file)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/hg38.genome"
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
         --igvCommands = commands for IGV to capture images to tracks (string, i.e. path/to/commands)
-            default: './scripts/igvCommands'
-        --set = the set number of the experiment (int, i.e. 001)
-            default: "001"
+            default: '/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/scripts/igvCommands'
         --mapq = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
         --index = whether there are fastq files for the index reads or not (boolean, i.e. True)
-            default: "True"
+            default: "False"
+        --exclude = exclusion file to exclude certain samples from analysis (path/to/exclude)
+            default: ""
         --snakemake = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
 
@@ -49,7 +49,7 @@ file structure
 ##############
 
 ATACseq.py <executable>
-Snakefile <constructs pipeline>
-rules/* <rules for executable pipeline>
+Snakefile <constructs pipeline from rules>
+rules/* <rules for executable pipeline with helper code>
 scripts/* <R, python, or bash scripts to call in pipeline>
 envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
