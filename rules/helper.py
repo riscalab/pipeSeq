@@ -17,7 +17,7 @@ def findFiles(exclusion):
     if os.path.exists(exclusion):
         with open(exclusion, 'r') as ftp:
             for line in ftp:
-                exclude.append(line)
+                exclude.append(line.strip())
     for base, dirs, files in os.walk("."):
         for fastq in files:
             if fastq.endswith(".fastq.gz") and not fastq.startswith("Undetermined") and "trim" not in fastq:
