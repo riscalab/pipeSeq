@@ -23,7 +23,7 @@ optTags = {
     # sizes of chromosomes (string, i.e. path/to/genome/file)
     '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes",
     # commands for IGV to capture images to tracks (string, i.e. path/to/commands)
-    '--igvCommands': './scripts/igvCommands',
+    '--igvCommands': '/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/scripts/igvCommands',
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
     # whether there are fastq files for the index reads or not
