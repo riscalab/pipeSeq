@@ -28,12 +28,14 @@ rule ATACoffset:
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bam"
     params:
-        chromSize = config['chromSize'],
+        #chromSize = config['chromSize'],
+        ref = config['genomeRef'],
         temp = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bed",
         mapq = int(config['mapq'])
     run:
         shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.temp}""")
-        shell("bedtools bedtobam -i {params.temp} -g {params.chromSize} -mapq {params.mapq} > {output}")
+        shell("bedtools bedtobam -i {params.temp} -g {params.ref} -mapq {params.mapq} -bed12 -ubam | samtools view -bS -o {output}")
+        shell("samtools index {output}") # regenerate index file
         shell("rm {params.temp}")
 
 ################################
