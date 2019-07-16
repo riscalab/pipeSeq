@@ -29,13 +29,16 @@ rule ATACoffset:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bam"
     params:
         chromSize = config['chromSize'],
-        temp = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bed",
+        tempBed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bed",
         mapq = int(config['mapq'])
+        tempBam = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
     run:
-        shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.temp}""")
-        shell("bedtools bedtobam -i {params.temp} -g {params.chromSize} -mapq {params.mapq} -ubam | samtools view -bS -o {output}")
+        shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.tempBed}""")
+        shell("bedtools bedtobam -i {params.tempBed} -g {params.chromSize} -mapq {params.mapq} -ubam | samtools view -bS -o {output}")
+        shell("picard SortSam  I={output}  O={params.tempBam}  SORT_ORDER=coordinate") #sort 
+        shell("mv {params.tempBam} {output}")
         shell("samtools index {output}") # regenerate index file
-        shell("rm {params.temp}")
+        shell("rm {params.tempBed} {params.tempBam}")
 
 ################################
 # call peaks to make bed (2)
