@@ -50,6 +50,16 @@ numpages <- ceiling(numlibs/plotsperpage)
 minplot <- 1
 maxplot <- min(plotsperpage, numlibs)
 
+# determine maximum read (y value) (NP EDIT)
+max_read <- 1
+for (i in seq(from=minplot, to=numlibs)) {
+  isdfilename <- make.hist.filename(libslist[i], logfileprefix, "log")
+  isd <- read.isd(isdfilename)
+  if ( max(isd$read_count) >= max_read) {
+    max_read = max(isd$read_count)
+  }
+}
+
 for (page in seq(from=1, to=numpages)) {
   
   pdf(sprintf(paste0(outfilename, "%03d", ".pdf"),page), paper="a4r", width=9, height=7)
@@ -58,7 +68,7 @@ for (page in seq(from=1, to=numpages)) {
   for (i in seq(from=minplot, to=maxplot)) {
     isdfilename <- make.hist.filename(libslist[i], logfileprefix, "log")
     isd <- read.isd(isdfilename)
-    plot(isd$fragment_length, isd$read_count, type="l", xlab="length (bp)", ylab="reads", main=libslist[i], xlim=c(0,600))
+    plot(isd$fragment_length, isd$read_count, type="l", xlab="length (bp)", ylab="reads", main=libslist[i], xlim=c(0,600), ylim=c(0, max_read))
   }
   
   minplot <- maxplot + 1
