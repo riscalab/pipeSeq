@@ -17,12 +17,12 @@ where:
             default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
         --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
-        --set = the set number of the experiment (int, i.e. 001)
-            default: "001"
         --mapq = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
         --index = whether there are fastq files for the index reads or not (boolean, i.e. True)
-            default: "True"
+            default: "False"
+        --exclude = exclusion file to exclude certain samples from analysis (string, i.e. path/to/exclude)
+            default: ""
         --snakemake = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
 
@@ -39,7 +39,7 @@ file structure
 ##############
 
 fastq2bam.py <executable>
-Snakefile <constructs pipeline>
-rules/* <rules for pipeline>
+Snakefile <constructs pipeline through including rules>
+rules/* <rules for pipeline along with any helper files>
 scripts/* <R, python, or bash scripts to call in pipeline>
 envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
