@@ -30,7 +30,7 @@ rule ATACoffset:
     params:
         chromSize = config['chromSize'],
         tempBed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bed",
-        mapq = int(config['mapq'])
+        mapq = int(config['mapq']),
         tempBam = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
     run:
         shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.tempBed}""")
