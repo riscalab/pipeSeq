@@ -33,16 +33,13 @@ rule ATACoffset:
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bam"
     params:
-        chromSize = config['chromSize'],
-        tempBed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bed",
-        mapq = int(config['mapq']),
-        tempBam = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
+        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
+    threads: 8
     run:
-        shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.tempBed}""")
-        shell("bedtools bedtobam -i {params.tempBed} -g {params.chromSize} -mapq 0 > {params.tempBam}")
-        shell("picard SortSam  I={params.tempBam}  O={output}  SORT_ORDER=coordinate") #sort 
+        shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}"}
+        shell("picard SortSam  I={params}  O={output}  SORT_ORDER=coordinate") #sort 
         shell("samtools index {output}") # regenerate index file
-        shell("rm {params.tempBed} {params.tempBam}")
+        shell("rm {params}")
 
 ################################
 # call peaks to make bed (2)
@@ -91,7 +88,6 @@ rule bedGraph2bigWig:
     params:
         chromSize = config['chromSize']
     run:
-        shell("rm {input.check}")
         shell("bedGraphToBigWig {input} {params.chromSize} {output}")
 
 ################################
@@ -100,7 +96,7 @@ rule bedGraph2bigWig:
 
 rule visualize_and_analyzeBigWig:
     input:
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw"
+        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw",
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.tab"
     params: 
@@ -108,7 +104,7 @@ rule visualize_and_analyzeBigWig:
         bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
         tmp = "{sample}_IGVcmds_tmp"
     run:
-        shell("printf 'load {input}\n" +
+        shell("printf 'load {input}\n" + # load genome around here
              "snapshotDirectory {wildcards.sample}/tracks\n';" +
              "cat {params.cmds} > {params.tmp}")
         shell("igv -b {params.tmp}")
