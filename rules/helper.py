@@ -1,4 +1,5 @@
-# helper file for rules
+#! usr/bin/env python 
+# npagane | 190701 | risca lab | helper file for rules
 
 import os
 import numpy as np

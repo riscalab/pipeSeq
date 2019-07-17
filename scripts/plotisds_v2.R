@@ -5,7 +5,7 @@
 # May 4, 2015
 # Version 1.1 # June 1, 2015 changed hist_data_cleaned to hist_data_nodups
 # Version 2.0 # June 25, moved libs.txt and hist_data_nodups_1linehdr into cmd line params
-# edited by Nicole Pagane to remove extra lines at the beginning of hist log files
+# edited by Nicole Pagane to ignore extra lines at the beginning of hist log files and to standardize y-axis
 
 read.isd <- function(filename) {  
   # Read the ISD histogram file

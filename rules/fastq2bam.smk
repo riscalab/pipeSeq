@@ -1,4 +1,5 @@
-#! fastq2bam pipeline rules
+#! usr/bin/env snakemake
+## npagane | 190701 | risca lab | fastq2bam pipeline rules
 
 # include this file to incororporate these rules into a Snakefile for execution
 
@@ -185,7 +186,7 @@ rule filter_and_removeDuplicates:
         shell("echo 'Histogram without duplicates'")
         shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=600 STOP_AFTER=5000000")
         # cleanup directory
-        shell("mkdir {wildcards.sample}/00_source")
+        shell("mkdir {wildcards.sample}/00_source") 
         shell("mv {wildcards.sample}/*.all.bam {wildcards.sample}/00_source/")
         shell("mv {wildcards.sample}/*.st.bam.bai {wildcards.sample}/00_source/")
 
