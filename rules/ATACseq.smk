@@ -87,9 +87,11 @@ rule bedGraph2bigWig:
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw"
     params:
-        chromSize = config['chromSize']
+        chromSize = config['chromSize'],
+        st = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.st.bedgraph"
     run:
-        shell("bedGraphToBigWig {input} {params.chromSize} {output}")
+        shell("LC_COLLATE=C sort -k1,1 -k2,2n {input} > {params.st}")
+        shell("bedGraphToBigWig {params.st} {params.chromSize} {output}")
 
 ################################
 # visualize and analyze tracks (5)
