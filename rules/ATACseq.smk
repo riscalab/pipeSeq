@@ -96,7 +96,7 @@ rule bedGraph2bigWig:
 ################################
 # visualize and analyze tracks (5)
 ################################
-
+'''
 rule visualize_and_analyzeBigWig:
     input:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw",
@@ -114,7 +114,7 @@ rule visualize_and_analyzeBigWig:
         #shell("rm {params.tmp}") # remove temp file for igv commands
         # statistics
         shell("bigWigAverageOverBed {input} {params.bed} {output}")
-
+'''
 ################################
 # success and summary (6)
 ################################
@@ -123,10 +123,10 @@ rule ATACseqSummary:
     input:
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac.tab",
-                ".trim.st.all.qft.rmdup.atac.tab",
-                ".trim.st.all.blft.rmdup.atac.tab",
-                ".trim.st.all.rmdup.atac.tab"
+                ".trim.st.all.blft.qft.rmdup.atac.bw", # changed from tab to bw
+                ".trim.st.all.qft.rmdup.atac.bw",
+                ".trim.st.all.blft.rmdup.atac.bw",
+                ".trim.st.all.rmdup.atac.bw"
             ), config['exclude']
         )
     output:
