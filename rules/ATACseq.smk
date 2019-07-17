@@ -107,11 +107,11 @@ rule visualize_and_analyzeBigWig:
         bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
         tmp = "{sample}_IGVcmds_tmp"
     run:
-        shell("printf 'load {input}\n" + # load genome around here
-             "snapshotDirectory {wildcards.sample}/tracks\n';" +
-             "cat {params.cmds} > {params.tmp}")
-        shell("igv -b {params.tmp}")
-        shell("rm {params.tmp}") # remove temp file for igv commands
+        #shell("printf 'load {input}\n" + # load genome around here # MAY WANT TO SEPARATE IGV TRACKS
+        #     "snapshotDirectory {wildcards.sample}/tracks\n';" +
+        #     "cat {params.cmds} > {params.tmp}")
+        #shell("igv -b {params.tmp}")
+        #shell("rm {params.tmp}") # remove temp file for igv commands
         # statistics
         shell("bigWigAverageOverBed {input} {params.bed} {output}")
 
