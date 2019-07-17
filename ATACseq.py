@@ -1,4 +1,5 @@
-# execute snakemake for ATACseq
+#! usr/bin/env python
+# npagane | 190701 | risca lab | execute snakemake for ATACseq
 
 import os
 import sys
@@ -23,12 +24,12 @@ optTags = {
     # sizes of chromosomes (string, i.e. path/to/genome/file)
     '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes",
     # commands for IGV to capture images to tracks (string, i.e. path/to/commands)
-    '--igvCommands': '/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/scripts/igvCommands',
+    '--igvCommands': '',
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
-    # whether there are fastq files for the index reads or not
+    # whether there are fastq files for the index reads or not (string, i.e. True)
     '--index': 'False',
-    # exclusion file to exclude certain samples from analysis
+    # exclusion file to exclude certain samples from analysis (string, i.e. path/to/exclude)
     '--exclude': '',
     # any snakemake flags for compilation (string, i.e. unlock)
     '--snakemake': '', 
@@ -56,9 +57,10 @@ if __name__ == '__main__':
                 snakeFlags += " --" + tempFlag
             else:
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
-    # set working directory to project directory
+    # set working directory to project directory and figure out where the snakefile is
     os.chdir(wd)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
     # execute snakemake and pass path to Snakefile with proper configs
-    os.system('snakemake --snakefile /rugpfs/fs0/risc_lab/store/risc_soft/ATACseq/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' ' + snakeFlags + ' --config' + addedTags) 
+    os.system('snakemake --snakefile ' + dir_path +  '/Snakefile --use-conda --conda-prefix ./.snakemake --rerun-incomplete --cores ' + cores + ' ' + snakeFlags + ' --config' + addedTags) 
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')

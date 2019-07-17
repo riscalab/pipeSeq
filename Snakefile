@@ -1,4 +1,5 @@
-#! /bin/bash snakemake
+#! usr/bin/env snakemake
+# npagane | 190701 | risca lab | snakefile including main rules and target rule
 
 ################################
 # pipeline output check

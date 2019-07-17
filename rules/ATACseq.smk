@@ -1,4 +1,5 @@
-# ATACseq pipeline rules
+#! usr/bin/env snakemake
+## npagane | 190701 | risca lab | ATACseq pipeline rules
 
 # include this file to incororporate these rules into a Snakefile for execution
 
@@ -12,7 +13,11 @@ import datetime
 
 # defaults for parameters set in ATACseq.py exectuable file
 
-# functions are found in helper.py file (from fastq2bam)
+# functions are found in helper.py file
+
+# determine if an igvCommands file was passed
+if not os.path.exists(config['igvCommands']):
+    config['igvCommands'] = workflow.basedir + "/scripts/igvCommands"
 
 wildcard_constraints:
     post_tag = "\d+"
@@ -101,13 +106,14 @@ rule visualize_and_analyzeBigWig:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.tab"
     params: 
         cmds = config['igvCommands'],
-        bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph"
+        bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
+        tmp = "{sample}_IGVcmds_tmp"
     run:
         shell("printf 'load {input}\n" +
-             "snapshotDirectory ./{wildcards.sample}/tracks\n';" +
-             "cat {params.cmds} > {wildcards.sample}_IGVmds_temp")
-        shell("igv -b {wildcards.sample}_IGVcmds_temp")
-        shell("rm {wildcards.sample}_cmds_temp") # remove temp file for igv commands
+             "snapshotDirectory {wildcards.sample}/tracks\n';" +
+             "cat {params.cmds} > {params.tmp}")
+        shell("igv -b {params.tmp}")
+        shell("rm {params.tmp}") # remove temp file for igv commands
         # statistics
         shell("bigWigAverageOverBed {input} {params.bed} {output}")
 
