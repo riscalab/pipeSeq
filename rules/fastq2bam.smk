@@ -90,8 +90,9 @@ rule alignInserts_and_fastqScreen:
     params:
         ref = config['genomeRef'],
         screen = "screen.log"
+    threads: 99 # will be scaled down but placed at arbitrarily high value
     run:
-        shell("(bowtie2 -p18 -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS -o {output.bam}) 2>{output.alignLog}")
+        shell("(bowtie2 -p{threads} -x {params.ref} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS -o {output.bam}) 2>{output.alignLog}")
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {wildcards.sample}_{params.screen}")
         shell("mv {wildcards.sample}_{params.screen} {wildcards.sample}/{params.screen}")
         shell("mv {wildcards.pre_tag}_R1_{wildcards.post_tag}.trim_screen.* {wildcards.sample}/")
