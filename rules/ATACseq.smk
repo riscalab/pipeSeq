@@ -36,8 +36,9 @@ rule ATACoffset:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
     threads: 8
     run:
+        shell("samtools index {input}") # suppress the pysam/htslib warning about the index file
         shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}")
-        shell("picard SortSam  I={params}  O={output}  SORT_ORDER=coordinate") #sort 
+        shell("samtools sort -O bam -o {output} {params}") #sort (dont use picard it is too strict about sam formatting)
         shell("samtools index {output}") # regenerate index file
         shell("rm {params}")
 
