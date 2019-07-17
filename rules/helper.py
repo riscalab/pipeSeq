@@ -58,5 +58,5 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
         if condition2:
             fpt = falsetrue
         else:
-            fpt = falsetrue
+            fpt = falsefalse
     return fpt
