@@ -40,8 +40,7 @@ rule ATACoffset:
     run:
         shell("""bedtools bamtobed -i {input.bam} | awk -F $'\\t' 'BEGIN {{OFS=FS}}{{ if ($6=="+") {{$2=$2+4}} else if ($6=="-") {{$3=$3-5}} print $0}}' > {params.tempBed}""")
         shell("bedtools bedtobam -i {params.tempBed} -g {params.chromSize} -mapq 0 > {params.tempBam}")
-        shell("picard SortSam  I={output}  O={params.tempBam}  SORT_ORDER=coordinate") #sort 
-        shell("mv {params.tempBam} {output}")
+        shell("picard SortSam  I={params.tempBam}  O={output}  SORT_ORDER=coordinate") #sort 
         shell("samtools index {output}") # regenerate index file
         shell("rm {params.tempBed} {params.tempBam}")
 
