@@ -36,7 +36,7 @@ rule ATACoffset:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.temp.bam"
     threads: 8
     run:
-        shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}"}
+        shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}")
         shell("picard SortSam  I={params}  O={output}  SORT_ORDER=coordinate") #sort 
         shell("samtools index {output}") # regenerate index file
         shell("rm {params}")
