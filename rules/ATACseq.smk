@@ -23,6 +23,13 @@ wildcard_constraints:
     post_tag = "\d+"
 
 ################################
+# commands with custom flags
+################################      
+
+callPeaks = "macs2 callpeak -f BAMPE -t {input} -n {params} --nomodel --shift 75 --extsize 150 --keep-dup all --call-summits --slocal 10000"
+bam2bg = "genomecov -ibam {input.bam} -5 -bg > {output.bg}"
+
+################################
 # align at insertion center (1)
 ################################
 
@@ -57,24 +64,25 @@ rule callPeakSummits:
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
-        "echo 'Calling Peaks...'; macs2 callpeak --nomodel -f BAM -t {input} -n {params} --nolambda --keep-dup all --call-summits --slocal 10000; " +
-        "touch {output.check}"
+        "echo 'Calling Peaks...'; " + callPeaks + "; " + "touch {output.check}"
 
 ################################
 # make tracks genomecov (3)
 ################################
 
-rule bam2bedGraph:
+rule bam2bed:
     input:
         bam = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bam",
         check = "{sample}/{pre_tag}_{post_tag}.{ext}.atac.CHECK"
     output:
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph"
+        bg = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
+        bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bed"
     params:
         chromSize = config['chromSize']
     run:
         shell("rm {input.check}")
-        shell("bedtools genomecov -ibam {input.bam} -5 -bg > {output}")
+        shell("bedtools bamtobed -i {output.bed}") # bam
+        shell("bedtools " + bam2bg) # bg
 
 
 ################################
@@ -94,18 +102,18 @@ rule bedGraph2bigWig:
         shell("bedGraphToBigWig {params.st} {params.chromSize} {output}")
 
 ################################
-# visualize and analyze tracks (5)
+# analyze tracks (5)
 ################################
-'''
+
 rule visualize_and_analyzeBigWig:
     input:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw",
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.tab"
     params: 
-        cmds = config['igvCommands'],
-        bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
-        tmp = "{sample}_IGVcmds_tmp"
+        #cmds = config['igvCommands'],
+        bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bed",
+        #tmp = "{sample}_IGVcmds_tmp"
     run:
         #shell("printf 'load {input}\n" + # load genome around here # MAY WANT TO SEPARATE IGV TRACKS
         #     "snapshotDirectory {wildcards.sample}/tracks\n';" +
@@ -114,7 +122,7 @@ rule visualize_and_analyzeBigWig:
         #shell("rm {params.tmp}") # remove temp file for igv commands
         # statistics
         shell("bigWigAverageOverBed {input} {params.bed} {output}")
-'''
+
 ################################
 # success and summary (6)
 ################################
@@ -149,7 +157,7 @@ rule ATACseqSummary:
             f.write("##########\n")
             f.write("chromosome sizes: " + config["chromSize"] + '\n')
             f.write("ivg commands: " + config["igvCommands"] + '\n')
-            f.write("bedGraph command: bedtools genomecov -i {input.bam} -5 -bg > {output}\n")
-            f.write("peak call command: macs2 callpeak --nomodel -t {input} -n {output} --nolambda --keep-dup all --call-summits --slocal 10000")
+            f.write("bedGraph command: " + bam2bg + '\n')
+            f.write("peak call command: " + callPeaks + '\n') 
             f.write("SUMMARY\n")
             f.write("#######\n")

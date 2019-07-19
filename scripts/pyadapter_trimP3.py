@@ -1,0 +1,1 @@
+../../fastq2bam/scripts/pyadapter_trimP3.py
