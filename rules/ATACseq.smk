@@ -131,10 +131,10 @@ rule ATACseqSummary:
     input:
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac.bw", # changed from tab to bw
-                ".trim.st.all.qft.rmdup.atac.bw",
-                ".trim.st.all.blft.rmdup.atac.bw",
-                ".trim.st.all.rmdup.atac.bw"
+                ".trim.st.all.blft.qft.rmdup.atac.tab", 
+                ".trim.st.all.qft.rmdup.atac.tab",
+                ".trim.st.all.blft.rmdup.atac.tab",
+                ".trim.st.all.rmdup.atac.tab"
             ), config['exclude']
         )
     output:
