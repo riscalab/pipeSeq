@@ -54,7 +54,7 @@ rule trimAdapters:
         r1 = "{pre_tag}_R1_{post_tag}.trim.fastq.gz",
         r2 = "{pre_tag}_R2_{post_tag}.trim.fastq.gz"
     run:
-        shell("/rugpfs/fs0/risc_lab/store/risc_soft/pyadapter_trim/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
+        shell(workflow.basedir + "/scripts/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {wildcards.sample}/adapter_trim.log")
         shell("mv {params.r1} {wildcards.sample}/")
         shell("mv {params.r2} {wildcards.sample}/")
 
