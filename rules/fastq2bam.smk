@@ -192,17 +192,29 @@ rule filter_and_removeDuplicates:
         shell("mv {wildcards.sample}/*.st.bam.bai {wildcards.sample}/00_source/")
 
 ################################
-# success and summary (6)
+# TSS enrichment (6)
+################################
+
+rule TSS_enrichment:
+    input:
+        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam"
+    output:
+        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam.RefSeqTSS.png"
+    run:
+        shell(workflow.basedir + "/scripts/pyMakeVplot.py -a {input} -b {params.TSS} -e 2000 -p ends -s 5 -v -u -o {output}")
+
+################################
+# success and summary (7)
 ################################
 
 rule fastq2bamSummary:
     input:
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.bam",
-                ".trim.st.all.qft.rmdup.bam",
-                ".trim.st.all.blft.rmdup.bam",
-                ".trim.st.all.rmdup.bam"
+                ".trim.st.all.blft.qft.rmdup.bam.RefSeqTSS.png",
+                ".trim.st.all.qft.rmdup.bam.RefSeqTSS.png",
+                ".trim.st.all.blft.rmdup.bam.RefSeqTSS.png",
+                ".trim.st.all.rmdup.bam.RefSeqTSS.png"
             ), config['exclude']
         )
     output:
