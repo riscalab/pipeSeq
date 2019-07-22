@@ -262,17 +262,18 @@ rule fastq2bamSummary:
             f.write("SUMMARY\n")
             f.write("#######\n")
             # summary stats over the samples
-            f.write("RAW READ PAIRS\n")
+            f.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tNUM_READS_POST_FILTER\n")
             for ftp in params.files:
-                f.write(ftp + ': ' + os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\n')
-            f.write("ESTIMATED LIBRARY SIZE; PERCENT DUPLICATED\n")
-            for ftp in params.files:
-                f.write(ftp + ': ' + os.popen("awk '{{if (FNR == 8) print $11, $10}}' " + ftp + "/dups.log").read().strip() +'\n')
-            f.write("NUMBER MITOCHONDRIAL; PERCENT MITOCHONDRIAL\n")
-            for ftp in params.files:
+                f.write(ftp + '\t')
+                f.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
+                f.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
+                f.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
+                f.write(os.popen("""awk '{{if (FNR == 8) print $10}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
-                f.write(ftp + ': ' + os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + " ")
-                f.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{print (100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\n')
-                shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") # finish clean up by moving index file
+                f.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + "\t")
+                f.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{print (100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
+                f.write(os.popen("samtools idxstats " + ftp + "/*.st.all*rmdup.bam | awk '{s+=$3} END{print (s/2)}'").read().strip() +'\n')
+                # finish clean up by moving index file
+                shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
 
 

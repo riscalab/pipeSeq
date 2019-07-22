@@ -50,10 +50,11 @@ if __name__ == '__main__':
         if len(tempTag) == 1:
             addedTags += " '" + tag[2:] + '="' + optTags[tag] + '"' + "'"
         else:
-            tempFlag = tempTag[1].split(' ')[1]
             if tag == "--snakemake":
+                tempFlag = ' '.join(tempTag[1].split('--')[0].split(' ')[1:])
                 snakeFlags += " --" + tempFlag
             else:
+                tempFlag = tempTag[1].split(' ')[1]
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"
     # set working directory to project directory and figure out where the snakefile is
     os.chdir(wd)
