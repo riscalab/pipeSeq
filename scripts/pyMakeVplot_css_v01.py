@@ -49,7 +49,7 @@ if len(sys.argv)==1:
 # assign mat
 def asn_mat(val,mat,s_int,e_int,t,i,weight):
     if float(val)>=s_int and float(val)<e_int-1 and t<rows:  # -1 correct?
-        base = val-s_int
+        base = int(val-s_int) # NPEDIT
         if len(p1_ints[0]) == 3:
             mat[t][base] += weight
         elif p1_ints[i][int(options.s)-1] == "-":
@@ -79,12 +79,12 @@ def sub_Mat(start):
             if p2_rds.is_reverse:
                 continue #NP EDIT fix indentation (found another version online and adapted indentation to that file)
             else:
-		        l_pos = p2_rds.pos #NP 
+                l_pos = p2_rds.pos
                 # calculate center point
-		        ilen = abs(p2_rds.tlen) 
+                ilen = int(abs(p2_rds.tlen)) #NPEDIT make int
                 #ilen = 1
-		        r_pos=l_pos+ilen 
-		        c_pos=l_pos+ilen/2 
+                r_pos=l_pos+ilen 
+                c_pos=l_pos+ilen/2 
                 if ilen%2==1 and options.p=='center':
                     mat=asn_mat(c_pos,mat,s_int,e_int,ilen,i,0.5)
                     mat=asn_mat(c_pos+1,mat,s_int,e_int,ilen,i,0.5)
@@ -113,9 +113,9 @@ cols = int(options.e)*2
 
 # split bedfile into chunks
 maxi=len(p1_ints)
-chunksize=maxi/int(options.c)
-chunks=maxi/chunksize
-starts=range(0,maxi,chunksize)
+chunksize=int(maxi/int(options.c)) # NPEDIT make int
+chunks=int(maxi/chunksize)
+starts=range(0,maxi,chunksize) 
 
 # parallel processed computation of matrix for each chunk
 if __name__ == "__main__":
