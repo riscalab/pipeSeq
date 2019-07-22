@@ -21,10 +21,8 @@ optTags = {
     '--genomeRef': "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome",
     # blacklist for filtering (string, i.e. path/to/blacklist)
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
-    # sizes of chromosomes (string, i.e. path/to/genome/file)
-    '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes",
-    # commands for IGV to capture images to tracks (string, i.e. path/to/commands)
-    '--igvCommands': '',
+    # TSS for that genome (string, i.e. path/to/TSS)
+    '--TSS': "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed",
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
     # whether there are fastq files for the index reads or not (string, i.e. True)
@@ -33,6 +31,8 @@ optTags = {
     '--exclude': '',
     # any snakemake flags for compilation (string, i.e. unlock)
     '--snakemake': '', 
+    # sizes of chromosomes (string, i.e. path/to/genome/file)
+    '--chromSize': "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes",
    
 }
 

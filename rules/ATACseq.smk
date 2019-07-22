@@ -15,10 +15,6 @@ import datetime
 
 # functions are found in helper.py file
 
-# determine if an igvCommands file was passed
-if not os.path.exists(config['igvCommands']):
-    config['igvCommands'] = workflow.basedir + "/scripts/igvCommands"
-
 wildcard_constraints:
     post_tag = "\d+"
 
@@ -27,7 +23,7 @@ wildcard_constraints:
 ################################      
 
 callPeaks = "macs2 callpeak -f BAMPE -t {input} -n {params} --nomodel --shift 75 --extsize 150 --keep-dup all --call-summits --slocal 10000"
-bam2bg = "genomecov -ibam {input.bam} -5 -bg > {output.bg}"
+bam2bg = "bedtools genomecov -ibam {input.bam} -5 -bg > {output.bg}"
 
 ################################
 # align at insertion center (1)
@@ -77,13 +73,10 @@ rule bam2bed:
     output:
         bg = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bedgraph",
         bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bed"
-    params:
-        chromSize = config['chromSize']
     run:
         shell("rm {input.check}")
         shell("bedtools bamtobed -i {output.bed}") # bam
-        shell("bedtools " + bam2bg) # bg
-
+        shell(bam2bg) # bam to bedgraph command defined above
 
 ################################
 # create bigwig for tracks (4)
@@ -95,11 +88,10 @@ rule bedGraph2bigWig:
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bw"
     params:
-        chromSize = config['chromSize'],
         st = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.st.bedgraph"
     run:
         shell("LC_COLLATE=C sort -k1,1 -k2,2n {input} > {params.st}")
-        shell("bedGraphToBigWig {params.st} {params.chromSize} {output}")
+        shell("bedGraphToBigWig {params.st} {config[chromSize]} {output}")
 
 ################################
 # analyze tracks (5)
@@ -111,16 +103,8 @@ rule visualize_and_analyzeBigWig:
     output:
         "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.tab"
     params: 
-        #cmds = config['igvCommands'],
         bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bed",
-        #tmp = "{sample}_IGVcmds_tmp"
     run:
-        #shell("printf 'load {input}\n" + # load genome around here # MAY WANT TO SEPARATE IGV TRACKS
-        #     "snapshotDirectory {wildcards.sample}/tracks\n';" +
-        #     "cat {params.cmds} > {params.tmp}")
-        #shell("igv -b {params.tmp}")
-        #shell("rm {params.tmp}") # remove temp file for igv commands
-        # statistics
         shell("bigWigAverageOverBed {input} {params.bed} {output}")
 
 ################################
@@ -156,8 +140,7 @@ rule ATACseqSummary:
             f.write("PARAMETERS" + '\n')
             f.write("##########\n")
             f.write("chromosome sizes: " + config["chromSize"] + '\n')
-            f.write("ivg commands: " + config["igvCommands"] + '\n')
-            f.write("bedGraph command: " + bam2bg + '\n')
             f.write("peak call command: " + callPeaks + '\n') 
+            f.write("bam to bedgraph command: " + bam2bg + '\n')
             f.write("SUMMARY\n")
             f.write("#######\n")
