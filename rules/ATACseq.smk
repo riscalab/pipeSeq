@@ -75,7 +75,7 @@ rule bam2bed:
         bed = "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.atac.bed"
     run:
         shell("rm {input.check}")
-        shell("bedtools bamtobed -i {output.bed}") # bam
+        shell("bedtools bamtobed -i {input.bam} > {output.bed}") # bam
         shell(bam2bg) # bam to bedgraph command defined above
 
 ################################
@@ -130,17 +130,17 @@ rule ATACseqSummary:
         with open(output[0], "w") as f: 
             f.write('user: ' + os.environ.get('USER') + '\n')
             f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
-            f.write('env: ATACseq\n')
+            f.write('env: ATACseq\n\n')
             f.write("SOFTWARE\n")
+            f.write("########\n")
             f.write("python version: " + str(sys.version_info[0]) + '\n')
             f.write("bedtools version: " + os.popen("bedtools --version").read() + '\n')
             f.write("macs2 version: 2.1.2 <in macs2_python2.yml conda env>\n") # must update if macs2_python2 conda env is updated
-            f.write("ucsc tools version: 2 (conda 332)") # must update if new version ever downloaded (shouldnt bc software dependencies)
-            f.write("\n\n")
+            f.write("ucsc tools version: 2 (conda 332)\n\n") # must update if new version ever downloaded (shouldnt bc software dependencies)
             f.write("PARAMETERS" + '\n')
             f.write("##########\n")
             f.write("chromosome sizes: " + config["chromSize"] + '\n')
             f.write("peak call command: " + callPeaks + '\n') 
-            f.write("bam to bedgraph command: " + bam2bg + '\n')
+            f.write("bam to bedgraph command: " + bam2bg + '\n\n')
             f.write("SUMMARY\n")
             f.write("#######\n")
