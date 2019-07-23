@@ -51,8 +51,10 @@ if __name__ == '__main__':
             addedTags += " '" + tag[2:] + '="' + optTags[tag] + '"' + "'"
         else:
             if tag == "--snakemake":
-                tempFlag = ' '.join(tempTag[1].split('--')[0].split(' ')[1:])
-                snakeFlags += " --" + tempFlag
+                tempTag = tempTag[1:]
+                for temp in tempTag:
+                    tempFlag = ' '.join(temp.split('--')[0].split(' ')[1:])
+                    snakeFlags += " --" + tempFlag
             else:
                 tempFlag = tempTag[1].split(' ')[1]
                 addedTags += " '" + tag[2:] + '="' + tempFlag + '"' + "'"

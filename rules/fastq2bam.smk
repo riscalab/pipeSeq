@@ -68,7 +68,7 @@ rule trimAdapters:
 # QC of fastq files (2)
 ################################
 
-rule fastqQC:
+rule fastqc:
     input:
         r1 = "{sample}/{pre_tag}_R1_{post_tag}.trim.fastq.gz",
         r2 = "{sample}/{pre_tag}_R2_{post_tag}.trim.fastq.gz"
@@ -135,17 +135,18 @@ rule filterBam:
         filterLog = "filtering.log"
     run:
         shell("samtools index {input}")
-        shell("echo 'sh02a_filter_bam.sh: Removing reads from unwanted chromosomes and scaffolds'")
+        shell("echo 'Removing reads from unwanted chromosomes and scaffolds'")
         shell("samtools view -b {input} `echo {params.chrs}` > {output}")
         shell("samtools view -b {input} chrM > {params.chrM}")
-        shell("echo 'Filtering file {input} by script sh02a_filter_bam.sh' >> {wildcards.sample}_{params.filterLog}")
+        shell("echo 'Filtering file {input} by rules filterBam and filter_removeDups_and_enrichTSS' >> {wildcards.sample}_{params.filterLog}")
         shell("mv {wildcards.sample}_{params.filterLog} {wildcards.sample}/{params.filterLog}")
 
 ################################
-# filter and remove duplicates (6)
+# blacklist and map quality filter, 
+# remove duplicates, and TSS enrichment (6)
 ################################
 
-rule filter_and_removeDuplicates:
+rule filter_removeDups_and_enrichTSS:
     input:
         "{sample}/{pre_tag}_{post_tag}.trim.st.all.bam"
     output:
@@ -160,7 +161,7 @@ rule filter_and_removeDuplicates:
     run:
         # filter by blacklist if provided
         if os.path.exists(config["blacklist"]):
-            shell("echo 'sh02a_filter_bam.sh: Removing blacklisted reads'")
+            shell("echo 'Removing blacklisted reads'")
             shell("bedtools intersect -v -abam {input} -b {config[blacklist]} -wa > {wildcards.sample}_temp.bam") # produces temp file
             ftp = "{wildcards.sample}/{wildcards.pre_tag}_{wildcards.post_tag}.trim.st.all.blft.bam"
             shell("samtools view -bh -f 0x2 {wildcards.sample}_temp.bam -o " + ftp)
@@ -168,23 +169,23 @@ rule filter_and_removeDuplicates:
             shell("echo 'Blacklist filtered using file {config[blacklist]}.' >> {params.filterLog}")
         else:
             ftp = input
-            shell("echo 'sh02a_filter_bam.sh: Blacklist file not found or specified. Skipping blacklist filter.'")
+            shell("echo 'Blacklist file not found or specified. Skipping blacklist filter.'")
             shell("echo 'Did not filter by blacklist.' >> {params.filterLog}")
         # filter by map quality if provided
         if int(config["mapq"]) > 0:
-            shell("echo 'sh02a_filter_bam.sh: Removing low quality reads'")
+            shell("echo 'Removing low quality reads'")
             tmp = str(ftp).split('.bam')[0] + '.qft.bam'
             shell("samtools view -bh -f 0x2 -q {config[mapq]} " + str(ftp) + " -o " + tmp)
             ftp = tmp
             shell("echo 'Filtered with mapping quality filter {config[mapq]}.' >> {params.filterLog}")
         else:
-            shell("echo 'sh02a_filter_bam.sh: Mapping quality threshold not specified, quality filter skipped'")
+            shell("echo 'Mapping quality threshold not specified, quality filter skipped'")
             shell("echo 'Did not filter by mapping quality.' >> {params.filterLog}")
         # histogram with duplicates
         shell("echo 'Histogram with duplicates'")
         shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histDupsLog} H={params.histDupsPDF} W=600 STOP_AFTER=5000000")
         # remove duplicates
-        shell("echo 'sh02b_remove_dups_estimate_diversity.sh: Removing duplicates'")
+        shell("echo 'Removing duplicates'")
         tmp = ftp.split('.bam')[0] + '.rmdup.bam'
         shell("picard MarkDuplicates I=" + ftp + " O=" + tmp + " METRICS_FILE={params.dupsLog} REMOVE_DUPLICATES=true")
         ftp = tmp
@@ -192,37 +193,29 @@ rule filter_and_removeDuplicates:
         shell("samtools index " + ftp)
         shell("echo 'Histogram without duplicates'")
         shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=600 STOP_AFTER=5000000")
-
-################################
-# TSS enrichment (6)
-################################
-
-rule TSS_enrichment:
-    input:
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam"
-    output:
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam.RefSeqTSS.png"
-    params: 
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam.RefSeqTSS"
-    run:
-        shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a {input} -b {config[TSS]} -e 2000 -p ends -s 5 -v -u -o {params}")
+        # TSS enrichment if provided
+        if os.path.exists(config["TSS"]):
+            tmp = ftp + 'RefSeqTSS'
+            shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a " + ftp + " -b {config[TSS]} -e 2000 -p ends -s 5 -v -u -o " + tmp)
+        else:
+            shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
         # cleanup directory
         shell("mkdir {wildcards.sample}/00_source") 
         shell("mv {wildcards.sample}/*.all.bam {wildcards.sample}/00_source/")
         shell("mv {wildcards.sample}/*.chrM.bam {wildcards.sample}/00_source/")
 
 ################################
-# success and summary (7)
+# combine insert plots and summary (7)
 ################################
 
 rule fastq2bamSummary:
     input:
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.bam.RefSeqTSS.png",
-                ".trim.st.all.qft.rmdup.bam.RefSeqTSS.png",
-                ".trim.st.all.blft.rmdup.bam.RefSeqTSS.png",
-                ".trim.st.all.rmdup.bam.RefSeqTSS.png"
+                ".trim.st.all.blft.qft.rmdup.bam",
+                ".trim.st.all.qft.rmdup.bam",
+                ".trim.st.all.blft.rmdup.bam",
+                ".trim.st.all.rmdup.bam"
             ), config['exclude']
         )
     output:
@@ -262,7 +255,7 @@ rule fastq2bamSummary:
             f.write("SUMMARY\n")
             f.write("#######\n")
             # summary stats over the samples
-            f.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tNUM_READS_POST_FILTER\n")
+            f.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\n")
             for ftp in params.files:
                 f.write(ftp + '\t')
                 f.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
@@ -271,8 +264,12 @@ rule fastq2bamSummary:
                 f.write(os.popen("""awk '{{if (FNR == 8) print $10}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
                 f.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + "\t")
-                f.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{print (100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
-                f.write(os.popen("samtools idxstats " + ftp + "/*.st.all*rmdup.bam | awk '{s+=$3} END{print (s/2)}'").read().strip() +'\n')
+                f.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.0f",100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
+                f.write(os.popen("samtools idxstats " + ftp + "/*.st.all*rmdup.bam | awk '{s+=$3} END{print (s/2)}'").read().strip() +'\t')
+                if os.path.exists(config["TSS"]):
+                    f.write(os.popen("sort -nrk1,1 " + ftp + "/*RefSeqTSS | head -1").read().strip() +'\n')
+                else:
+                    f.write("NA" +'\n')
                 # finish clean up by moving index file
                 shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
 

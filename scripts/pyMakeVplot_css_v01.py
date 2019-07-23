@@ -6,6 +6,9 @@
 # modified by Viviana Risca, May 28. 2015 to adapt for irradiation data
 #   re-adapted this because of bugs in old version (partly parallelization bug, 
 #   also run error (TypeError: expected bytes got string))
+#
+# edited by Nicole Pagane (July 2019) to port to python 3, fix indentations, and output
+#           normalized smooth insertions rather than the raw matrix
 
 # Will make a V-plot from bed regions without adding Tn5 offsets
 
@@ -141,7 +144,8 @@ if not options.o:
     elif options.i == True: options.o=n1+'.'+n2+'.iSize'
     else: options.o=n1+'.'+n2+'.vplot'
 if options.u == True:
-    np.savetxt(options.o,mat,delimiter='\t',fmt='%s')
+    #np.savetxt(options.o,mat,delimiter='\t',fmt='%s') # NPEDIT change to smoothed curve
+    np.savetxt(options.o,np.convolve(mat,np.ones(int(options.window)),'same')/int(options.window)/np.mean(mat[1:200]),delimiter='\t',fmt='%s')
 else:
     np.save(options.o,mat)
 
