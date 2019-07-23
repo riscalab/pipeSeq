@@ -150,7 +150,7 @@ rule filter_removeDups_and_enrichTSS:
     input:
         "{sample}/{pre_tag}_{post_tag}.trim.st.all.bam"
     output:
-        "{sample}/{pre_tag}_{post_tag}.{ext}.rmdup.bam"
+        "{sample}/{pre_tag}_{post_tag}{ext,.*}.rmdup.bam"
     params:
         filterLog = "{sample}/filtering.log",
         histDupsLog = "{sample}/hist_data_withdups.log",
