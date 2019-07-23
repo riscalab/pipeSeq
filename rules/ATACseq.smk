@@ -22,8 +22,8 @@ wildcard_constraints:
 # commands with custom flags
 ################################      
 
-callPeaks = "macs2 callpeak -f BAMPE -t {input} -n {params} --nomodel --shift 75 --extsize 150 --keep-dup all --call-summits --slocal 10000"
-bam2bg = "bedtools genomecov -ibam {input.bam} -5 -bg > {output.bg}"
+callPeaks = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -75 --extsize 150 --nolambda --keep-dup all --call-summits --slocal 10000"
+bam2bg = "bedtools genomecov -ibam {input.bam} -5 -bg -strand + -g {config[chromSize]}> {output.bg}"
 
 ################################
 # align at insertion center (1)
@@ -41,7 +41,7 @@ rule ATACoffset:
     run:
         shell("samtools index {input.bam}") # suppress the pysam/htslib warning about the index file
         shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}")
-        shell("samtools sort -O bam -o {output} {params}") #sort (dont use picard it is too strict about sam formatting)
+        shell("samtools sort -O bam -o {output} {params}") #sort (dont use picard it is too strict about bam formatting)
         shell("samtools index {output}") # regenerate index file
         shell("rm {params}")
 
