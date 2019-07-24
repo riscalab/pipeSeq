@@ -195,7 +195,7 @@ rule filter_removeDups_and_enrichTSS:
         shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=600 STOP_AFTER=5000000")
         # TSS enrichment if provided
         if os.path.exists(config["TSS"]):
-            tmp = ftp + 'RefSeqTSS'
+            tmp = ftp + '.RefSeqTSS'
             shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a " + ftp + " -b {config[TSS]} -e 2000 -p ends -s 5 -v -u -o " + tmp)
         else:
             shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
