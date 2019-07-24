@@ -22,8 +22,8 @@ wildcard_constraints:
 # commands with custom flags
 ################################      
 
-callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift 75 --extsize 150 --nolambda --keep-dup all --call-summits --slocal 10000" # --shift 36.5 --extsize 73
-bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} --o {output} -m FE" # fold enrichment 
+callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
+bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m FE" # fold enrichment 
 preS = """calc(){ awk 'BEGIN {{ print "$*" }}'; }; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=`1000000.0`"""
 S = "S=`calc num/den`;" 
 bdgcmppval = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m ppois -S $S" # p value
