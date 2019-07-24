@@ -22,7 +22,7 @@ wildcard_constraints:
 # commands with custom flags
 ################################      
 
-callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -36.5 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # -75 and 150
+callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift 75 --extsize 150 --nolambda --keep-dup all --call-summits --slocal 10000" # --shift 36.5 --extsize 73
 bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} --o {output} -m FE" # fold enrichment 
 preS = """calc(){ awk 'BEGIN {{ print "$*" }}'; }; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=`1000000.0`"""
 S = "S=`calc num/den`;" 
@@ -87,8 +87,7 @@ rule bam2bed:
 rule makeBedGraphSignalFC:
     input:
         treat = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
-        control = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg",
-        bed = "{sample}/tracks/{pre_tag}_{post_tag}{ext}.rmdup.atac.bed"
+        control = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg"
     output:
         "{sample}/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
     conda:
@@ -137,13 +136,12 @@ rule bedGraph2bigWig:
 
 rule analyzeBigWigTracks:
     input:
-        "{sample}/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac.bw"
+        bw = "{sample}/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac{ext2}.bw",
+        bed = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_peaks.narrowPeak"
     output:
-        "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.tab"
-    params: 
-        "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bed",
+        "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.tab"
     run:
-        shell("bigWigAverageOverBed {input} {params} {output}")
+        shell("bigWigAverageOverBed {input.bw} {input.bed} {output}")
 
 ################################
 # success and summary (7)
@@ -161,18 +159,18 @@ rule ATACseqSummary:
         ),
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac_FE.bw", 
-                ".trim.st.all.qft.rmdup.atac_FE.bw",
-                ".trim.st.all.blft.rmdup.atac_FE.bw",
-                ".trim.st.all.rmdup.atac_FE.bw"
+                ".trim.st.all.blft.qft.rmdup.atac_FE.tab", 
+                ".trim.st.all.qft.rmdup.atac_FE.tab",
+                ".trim.st.all.blft.rmdup.atac_FE.tab",
+                ".trim.st.all.rmdup.atac_FE.tab"
             ), config['exclude'], 'peakCalls'
         ),
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac_pval.bw",
-                ".trim.st.all.qft.rmdup.atac_pval.bw",
-                ".trim.st.all.blft.rmdup.atac_pval.bw",
-                ".trim.st.all.rmdup.atac_pval.bw"
+                ".trim.st.all.blft.qft.rmdup.atac_pval.tab",
+                ".trim.st.all.qft.rmdup.atac_pval.tab",
+                ".trim.st.all.blft.rmdup.atac_pval.tab",
+                ".trim.st.all.rmdup.atac_pval.tab"
             ), config['exclude'], 'peakCalls'
         ),
     output:
