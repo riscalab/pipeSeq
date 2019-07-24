@@ -32,13 +32,16 @@ def findFiles(exclusion):
     return WHOLEFILES
 
 # generate strucutre of expected files 
-def customFileExpand(ext, exclusion):
+def customFileExpand(ext, exclusion, dir = ''):
     WHOLEFILES = findFiles(exclusion)
     strout = []
     for sample in WHOLEFILES.keys():
         parts = list(set(WHOLEFILES[sample][0]) & set(WHOLEFILES[sample][1])) # may be up to 4 but has to have at least 2
-        uniq, inds = np.unique(WHOLEFILES[sample][0], return_index = True) 
-        ftp = sample + '/'
+        uniq, inds = np.unique(WHOLEFILES[sample][0], return_index = True)
+        if dir == '':
+            ftp = sample + '/'
+        else:
+            ftp = sample + '/' + dir + '/'
         for i in range(len(inds)):
             ind = inds.tolist().index(i)
             if uniq[ind] in parts:
