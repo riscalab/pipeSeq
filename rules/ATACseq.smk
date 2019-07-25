@@ -201,9 +201,6 @@ rule ATACseqSummary:
             f.write("SAMPLE\tPERCENT_READS_IN_PEAKS")
             for ftp in params.files:
                 f.write(ftp + '\t')
-                f.write(os.popen("""calc(){{ awk "BEGIN {{ print "$*" }}"; }}; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
+                f.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
                 ftp + "/peakCalls/*.bed | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam " 
-                + "| samtools view -c`; calc $num/$den") + '\n')
-                # cleanup
-                shell("rm " + ftp + "/*/*bdg") # remove the bedgraphs
-                shell("mv " + ftp + "/*bai " + ftp + "/00_source/")
+                + "| samtools view -c`; calc $num/$den").read().strip() + '\n')
