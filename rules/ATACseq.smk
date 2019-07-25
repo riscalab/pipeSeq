@@ -176,7 +176,8 @@ rule ATACseqSummary:
     output:
         "ATACseqRunSummary.log"
     params:
-        files = np.unique(list(helper.findFiles(config['exclude']).keys())) # order the samples
+        files = np.unique(list(helper.findFiles(config['exclude']).keys())), # order the samples
+         temp = "tempSummary_atac.log"
     run:
         print('\n###########################')
         print('ATAC-seq pipeline complete')
@@ -184,7 +185,6 @@ rule ATACseqSummary:
         with open(output[0], "w") as f: 
             f.write('user: ' + os.environ.get('USER') + '\n')
             f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
-            f.write('env: ATACseq\n\n')
             f.write("SOFTWARE\n")
             f.write("########\n")
             f.write("python version: " + str(sys.version_info[0]) + '\n')
@@ -198,9 +198,13 @@ rule ATACseqSummary:
             f.write("bam to bedgraph command: " + bam2bg + '\n\n')
             f.write("SUMMARY\n")
             f.write("#######\n")
-            f.write("SAMPLE\tPERCENT_READS_IN_PEAKS")
-            for ftp in params.files:
-                f.write(ftp + '\t')
-                f.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
-                ftp + "/peakCalls/*.bed | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam " 
-                + "| samtools view -c`; calc $num/$den").read().strip() + '\n')
+            with open(params.temp, "w") as g:
+                g.write("SAMPLE\tPERCENT_READS_IN_PEAKS\n")
+                for ftp in params.files:
+                    g.write(ftp + '\t')
+                    g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
+                    ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam " 
+                    + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f%", $1)}}' """).read().strip() + '\n')
+        # append summary log to rest of summary
+        shell("cat {params.temp} | column -t >> {output}")
+        shell("rm {params.temp}")
