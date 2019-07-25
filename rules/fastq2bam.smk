@@ -221,10 +221,11 @@ rule fastq2bamSummary:
     output:
         "fastq2bamRunSummary.log"
     params:
-        files = np.unique(list(helper.findFiles(config['exclude']).keys())) # order the samples
+        files = np.unique(list(helper.findFiles(config['exclude']).keys())), # order the samples
+        temp = "tempSummary_fastq.log"
     run:
         # make nice pdf of insert distributions
-        libs = "libs.txt"
+        libs = "libsTEMP_fastq.txt"
         with open(libs, "w") as f:
             for i in params.files:
                 f.write(i + '\n')
@@ -236,7 +237,6 @@ rule fastq2bamSummary:
         with open(output[0], "w") as f:
             f.write('user: ' + os.environ.get('USER') + '\n')
             f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
-            f.write('env: fastq2bam\n\n')
             f.write("SOFTWARE\n")
             f.write("########\n")
             f.write("python version: " + str(sys.version_info[0]) + '\n')
@@ -255,22 +255,26 @@ rule fastq2bamSummary:
             f.write("SUMMARY\n")
             f.write("#######\n")
             # summary stats over the samples
-            f.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\n")
-            for ftp in params.files:
-                f.write(ftp + '\t')
-                f.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
-                f.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
-                f.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
-                f.write(os.popen("""awk '{{if (FNR == 8) print $10}}' """ + ftp + "/dups.log").read().strip() +'\t')
-                shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
-                f.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + "\t")
-                f.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.0f",100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
-                f.write(os.popen("samtools idxstats " + ftp + "/*.st.all*rmdup.bam | awk '{s+=$3} END{print (s/2)}'").read().strip() +'\t')
-                if os.path.exists(config["TSS"]):
-                    f.write(os.popen("sort -nrk1,1 " + ftp + "/*RefSeqTSS | head -1").read().strip() +'\n')
-                else:
-                    f.write("NA" +'\n')
-                # finish clean up by moving index file
-                shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
+            with open(params.temp, "w") as g:
+                g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\n")
+                for ftp in params.files:
+                    g.write(ftp + '\t')
+                    g.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
+                    g.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
+                    g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
+                    g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
+                    shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
+                    g.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + "\t")
+                    g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
+                    g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
+                    if os.path.exists(config["TSS"]):
+                        g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\n')
+                    else:
+                        g.write("NA" +'\n')
+                    # finish clean up by moving index file
+                    shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
+        # append summary log to rest of summary
+        shell("cat {params.temp} | column -t >> {output}")
+        shell("rm {params.temp}")
 
 
