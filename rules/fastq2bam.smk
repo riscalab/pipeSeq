@@ -256,7 +256,7 @@ rule fastq2bamSummary:
             f.write("#######\n")
             # summary stats over the samples
             with open(params.temp, "w") as g:
-                g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\n")
+                g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tNUMBER_MITOCHONDRIAL\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tMAX_MYCOPLASMA_MAP\n")
                 for ftp in params.files:
                     g.write(ftp + '\t')
                     g.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
@@ -268,9 +268,10 @@ rule fastq2bamSummary:
                     g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
                     g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
                     if os.path.exists(config["TSS"]):
-                        g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\n')
+                        g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
                     else:
-                        g.write("NA" +'\n')
+                        g.write("NA" +'\t')
+                    g.write(os.popen("""awk '$1 ~ /Mycoplasma/ {{printf("%.2f\n", 100*($2-$3)/$2)}}' """ + ftp + "/*trim_screen.txt | sort -nrk1,1 | head -1").read().strip() + '\n')
                     # finish clean up by moving index file
                     shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
                     shell("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
