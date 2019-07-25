@@ -264,8 +264,8 @@ rule fastq2bamSummary:
                     g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
                     g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
                     shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
-                    g.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() + "\t")
-                    g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + """.idxstats.dat""").read().strip() +'\t')
+                    g.write(os.popen("""awk '{{if ($1 == "chrM") print $3}}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() + "\t")
+                    g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
                     g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
                     if os.path.exists(config["TSS"]):
                         g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\n')
@@ -273,6 +273,7 @@ rule fastq2bamSummary:
                         g.write("NA" +'\n')
                     # finish clean up by moving index file
                     shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
+                    shell("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
         # append summary log to rest of summary
         shell("cat {params.temp} | column -t >> {output}")
         shell("rm {params.temp}")
