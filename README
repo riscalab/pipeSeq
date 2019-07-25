@@ -26,6 +26,8 @@ where:
         --snakemake = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
 
+* for each snakemake flag desired, you must use the --snakemake tag preceding the flags (without "--" for the flags)
+
 ###########
 environment
 ###########
