@@ -24,8 +24,8 @@ wildcard_constraints:
 
 callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
 bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m FE" # fold enrichment 
-preS = """calc(){ awk 'BEGIN {{ print "$*" }}'; }; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=`1000000.0`"""
-S = "S=`calc num/den`;" 
+preS = """calc(){{ awk "BEGIN {{ print "$*" }}"; }}; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=1000000;"""
+S = """S=`calc $num/$den | awk '{{printf("%i", $1)}}'`;""" 
 bdgcmppval = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m ppois -S $S" # p value
 bam2bg = "bedtools genomecov -ibam {input} -5 -bg -strand + -g {config[chromSize]} > {output.bg}"
 
@@ -110,7 +110,7 @@ rule makeBedGraphSignalPval:
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
-        preS + ' ' + S + ' ' + bdgcmppval + S # macs2 bgdcmp command defined above for p value
+        preS + ' ' + S + ' ' + bdgcmppval # macs2 bgdcmp command defined above for p value
 
 ################################
 # create bigwig for tracks (5)
@@ -137,7 +137,7 @@ rule bedGraph2bigWig:
 rule analyzeBigWigTracks:
     input:
         bw = "{sample}/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac{ext2}.bw",
-        bed = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_peaks.narrowPeak"
+        bed = "{sample}/tracks/{pre_tag}_{post_tag}{ext}.rmdup.atac.bed"
     output:
         "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.tab"
     run:
@@ -201,9 +201,9 @@ rule ATACseqSummary:
             f.write("SAMPLE\tPERCENT_READS_IN_PEAKS")
             for ftp in params.files:
                 f.write(ftp + '\t')
-                f.write(os.popen("""calc(){ awk 'BEGIN {{ print "$*" }}'; }""" + "; num=`samtools view -c " + ftp + "/*.rmdup.atac.bam; den=`bedtools sort -i " + 
-                ftp + "/peakCalls/*.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +
-                ftp + "/*.rmdup.atac.bam -b stdin -ubam | samtools view -c`; calc $num/$den"))
-                f.write("\n")
-        # cleanup
-        shell("rm */*/*bdg") # remove the bedgraphs
+                f.write(os.popen("""calc(){{ awk "BEGIN {{ print "$*" }}"; }}; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
+                ftp + "/peakCalls/*.bed | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam " 
+                + "| samtools view -c`; calc $num/$den") + '\n')
+                # cleanup
+                shell("rm " + ftp + "/*/*bdg") # remove the bedgraphs
+                shell("mv " + ftp + "/*bai " + ftp + "/00_source/")
