@@ -200,7 +200,7 @@ rule filter_removeDups_and_enrichTSS:
         else:
             shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
         # cleanup directory
-        shell("mkdir {wildcards.sample}/00_source") 
+        shell("if [ ! -d {wildcards.sample}/00_source ]; then mkdir {wildcards.sample}/00_source; fi") 
         shell("mv {wildcards.sample}/*.all.bam {wildcards.sample}/00_source/")
         shell("mv {wildcards.sample}/*.chrM.bam {wildcards.sample}/00_source/")
 
@@ -271,7 +271,7 @@ rule fastq2bamSummary:
                         g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
                     else:
                         g.write("NA" +'\t')
-                    g.write(os.popen("""awk '$1 ~ /Mycoplasma/ {{printf("%.2f\n", 100*($2-$3)/$2)}}' """ + ftp + "/*trim_screen.txt | sort -nrk1,1 | head -1").read().strip() + '\n')
+                    g.write(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*R1*trim_screen.txt " + """| awk '{{printf("%.2f%\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip() + '\n')
                     # finish clean up by moving index file
                     shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
                     shell("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
