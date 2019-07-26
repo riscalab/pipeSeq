@@ -7,10 +7,11 @@
 #   re-adapted this because of bugs in old version (partly parallelization bug, 
 #   also run error (TypeError: expected bytes got string))
 #
-# edited by Nicole Pagane (July 2019) to port to python 3, fix indentations, and output
-#           normalized smooth insertions rather than the raw matrix
+# edited by Nicole Pagane (July 2019) to port to python 3, fix indentations, output
+#           normalized smooth insertions rather than the raw matrix, and made Tn5
+#           offset optional  
 
-# Will make a V-plot from bed regions without adding Tn5 offsets
+# Will make a V-plot from bed regions with optional Tn5 offset
 
 ##### IMPORT MODULES #####
 # import necessary for python
@@ -41,6 +42,7 @@ opts.add_option("-u", action="store_true", default=False, help="Print uncompress
 opts.add_option("-v", action="store_true", default=False, help="Print profile around bed file")
 opts.add_option("-i", action="store_true", default=False, help="Print insert sizes across intervals")
 opts.add_option("--window",default='20',help="window size for ploting")
+opts.add_option("--atac", action="store_true", default=False, help="apply ATAC-seq offset") #NPEDIT
 options, arguments = opts.parse_args()
 
 # return usage information if no argvs given
@@ -68,6 +70,13 @@ def sub_Mat(start):
     # loop through the intervals and get relevent info
     bamfile = pysam.Samfile(options.a, "rb")
     end=min(start+chunksize,len(p1_ints))
+    # check for atac offset 
+    if options.atac == True:
+        leftshift = 4
+        lenshift = 9
+    else:
+        leftshift = 0
+        lenshift = 0
     for i in range(start,end):
         # get interval as num
         center = int(p1_ints[i][1])+(int(p1_ints[i][2])-int(p1_ints[i][1]))/2
@@ -82,9 +91,9 @@ def sub_Mat(start):
             if p2_rds.is_reverse:
                 continue #NP EDIT fix indentation (found another version online and adapted indentation to that file)
             else:
-                l_pos = p2_rds.pos
+                l_pos = p2_rds.pos+leftshift # NPEDIT allow shift for ATAC data
                 # calculate center point
-                ilen = int(abs(p2_rds.tlen)) #NPEDIT make int
+                ilen = int(abs(p2_rds.tlen)-lenshift) #NPEDIT make int and allow shift for ATAC data
                 #ilen = 1
                 r_pos=l_pos+ilen 
                 c_pos=l_pos+ilen/2 
