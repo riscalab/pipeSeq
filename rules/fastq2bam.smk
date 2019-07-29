@@ -196,7 +196,7 @@ rule filter_removeDups_and_enrichTSS:
         # TSS enrichment if provided
         if os.path.exists(config["TSS"]):
             tmp = ftp + '.RefSeqTSS'
-            shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a " + ftp + " -b {config[TSS]} -e 2000 -p ends -s 5 -v -u -o " + tmp)
+            shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a " + ftp + " -b {config[TSS]} -e 2000 -p ends -s 5 -v -u --atac -o " + tmp)
         else:
             shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
         # cleanup directory
