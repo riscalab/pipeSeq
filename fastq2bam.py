@@ -22,7 +22,7 @@ optTags = {
     # blacklist for filtering (string, i.e. path/to/blacklist)
     '--blacklist': "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed",
     # TSS for that genome (string, i.e. path/to/TSS)
-    '--TSS': "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed",
+    '--TSS': "None",
     # the map quality threshold for alignment (int, i.e. 30)
     '--mapq': '30', 
     # whether there are fastq files for the index reads or not (boolean, i.e. False)
