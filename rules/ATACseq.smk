@@ -178,6 +178,7 @@ rule ATACseqSummary:
     params:
         files = np.unique(list(helper.findFiles(config['exclude']).keys())), # order the samples
          temp = "tempSummary_atac.log"
+    threads: 4
     run:
         print('\n###########################')
         print('ATAC-seq pipeline complete')
@@ -202,7 +203,7 @@ rule ATACseqSummary:
                 g.write("SAMPLE\tFRACTION_READS_IN_PEAKS\n")
                 for ftp in params.files:
                     g.write(ftp + '\t')
-                    g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "num=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; den=`bedtools sort -i " + 
+                    g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "den=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; num=`bedtools sort -i " + 
                     ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam " 
                     + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip() + '\n')
         # append summary log to rest of summary
