@@ -27,7 +27,7 @@ bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m FE" 
 preS = """calc(){{ awk "BEGIN {{ print "$*" }}"; }}; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=1000000;"""
 S = """S=`calc $num/$den | awk '{{printf("%i", $1)}}'`;""" 
 bdgcmppval = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m ppois -S $S" # p value
-bam2bg = "bedtools genomecov -ibam {input} -5 -bg {config[chromSize]} > {output.bg}"
+bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
 
 ################################
 # align at insertion center (1)
