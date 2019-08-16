@@ -131,19 +131,6 @@ rule bedGraph2bigWig:
         shell("rm {params.qft} {params.st}")
 
 ################################
-# analyze tracks (6a)
-################################
-
-rule analyzeBigWigTracks:
-    input:
-        bw = "{sample}/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac{ext2}.bw",
-        bed = "{sample}/tracks/{pre_tag}_{post_tag}{ext}.rmdup.atac.bed"
-    output:
-        "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.tab"
-    run:
-        shell("bigWigAverageOverBed {input.bw} {input.bed} {output}")
-
-################################
 # success and summary (7)
 ################################
 
@@ -151,26 +138,26 @@ rule ATACseqSummary:
     input:
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac.tab", 
-                ".trim.st.all.qft.rmdup.atac.tab",
-                ".trim.st.all.blft.rmdup.atac.tab",
-                ".trim.st.all.rmdup.atac.tab"
+                ".trim.st.all.blft.qft.rmdup.atac.bw", 
+                ".trim.st.all.qft.rmdup.atac.bw",
+                ".trim.st.all.blft.rmdup.atac.bw",
+                ".trim.st.all.rmdup.atac.bw"
             ), config['exclude'], 'tracks'
         ),
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac_FE.tab", 
-                ".trim.st.all.qft.rmdup.atac_FE.tab",
-                ".trim.st.all.blft.rmdup.atac_FE.tab",
-                ".trim.st.all.rmdup.atac_FE.tab"
+                ".trim.st.all.blft.qft.rmdup.atac_FE.bw", 
+                ".trim.st.all.qft.rmdup.atac_FE.bw",
+                ".trim.st.all.blft.rmdup.atac_FE.bw",
+                ".trim.st.all.rmdup.atac_FE.bw"
             ), config['exclude'], 'peakCalls'
         ),
         helper.customFileExpand(
             helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.atac_pval.tab",
-                ".trim.st.all.qft.rmdup.atac_pval.tab",
-                ".trim.st.all.blft.rmdup.atac_pval.tab",
-                ".trim.st.all.rmdup.atac_pval.tab"
+                ".trim.st.all.blft.qft.rmdup.atac_pval.bw",
+                ".trim.st.all.qft.rmdup.atac_pval.bw",
+                ".trim.st.all.blft.rmdup.atac_pval.bw",
+                ".trim.st.all.rmdup.atac_pval.bw"
             ), config['exclude'], 'peakCalls'
         ),
     output:
