@@ -31,7 +31,7 @@ def findFiles(exclusion):
                     WHOLEFILES[tmp2].append(tmp1.split('_'))
     return WHOLEFILES
 
-# generate strucutre of expected files 
+# generate structure of expected files 
 def customFileExpand(ext, exclusion, dir = ''):
     WHOLEFILES = findFiles(exclusion)
     strout = []
@@ -64,3 +64,17 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
         else:
             fpt = falsefalse
     return fpt
+
+# determine lanes that a certain sample was run through 
+#  THIS FUNCTION ASSUMES THAT THE DIRECTORY IS ORGANIZED BY SAMPLE/SAMPLE*.BAM
+def dertermine_lanes(sample):
+    lanes = []
+    for ftp in os.listdir('./' + sample):
+        if ftp.endswith(".bam"):
+            tmp1 = fastq.split(".bam")[0]
+            if (sample == tmp1.split('_')[0]):
+                if 'L00' in tmp1:
+                    lanes.append('_L00' + tmp1.split('L00')[1][0] + '_')
+    if len(lanes) == 0:
+        lanes.append('_')
+    return lanes
