@@ -36,11 +36,11 @@ bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {outp
 rule ATACoffset:
     input:
         "fastq2bamRunSummary.log", # ensure summary log
-        bam = "{sample}/{pre_tag}_{post_tag}{ext}.rmdup.bam"
+        bam = "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.bam"
     output:
-        "{sample}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bam"
+        "{config[sample]}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bam"
     params:
-        "{sample}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.temp.bam"
+        "{config[sample]}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.temp.bam"
     threads: 2
     run:
         shell("samtools index {input.bam}") # suppress the pysam/htslib warning about the index file
@@ -55,11 +55,11 @@ rule ATACoffset:
 
 rule callPeakSummits:
     input:
-        "{sample}/{pre_tag}_{post_tag}{ext}.rmdup.atac.bam"
+        "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.atac.bam"
     output:
-        expand("{{sample}}/peakCalls/{{pre_tag}}_{{post_tag}}{{ext,.*}}.rmdup.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak", "_treat_pileup.bdg", "_control_lambda.bdg"])
+        expand("{{config[sample]}}/peakCalls/{{config[sample]}}_{{post_tag}}{{ext,.*}}.rmdup.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak", "_treat_pileup.bdg", "_control_lambda.bdg"])
     params:
-        "{sample}/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac"
+        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -71,10 +71,10 @@ rule callPeakSummits:
 
 rule bam2bed:
     input:
-        "{sample}/{pre_tag}_{post_tag}{ext}.rmdup.atac.bam"
+        "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.atac.bam"
     output:
-        bg = "{sample}/tracks/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bdg",
-        bed = "{sample}/tracks/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bed"
+        bg = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bdg",
+        bed = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bed"
     run:
         shell("bedtools bamtobed -i {input} > {output.bed}") # bam to bed necessary for bigwig analysis
         shell(bam2bg) # bam to bedgraph command defined above
@@ -86,10 +86,10 @@ rule bam2bed:
 
 rule makeBedGraphSignalFC:
     input:
-        treat = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
-        control = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg"
+        treat = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
+        control = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg"
     output:
-        "{sample}/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
+        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -102,11 +102,11 @@ rule makeBedGraphSignalFC:
 
 rule makeBedGraphSignalPval:
     input:
-        treat = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
-        control = "{sample}/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg",
-        bed = "{sample}/tracks/{pre_tag}_{post_tag}{ext}.rmdup.atac.bed"
+        treat = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
+        control = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg",
+        bed = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext}.rmdup.atac.bed"
     output:
-        "{sample}/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_pval.bdg"
+        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac_pval.bdg"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -118,12 +118,12 @@ rule makeBedGraphSignalPval:
 
 rule bedGraph2bigWig:
     input:
-        "{sample}/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac{ext2}.bdg"
+        "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext}.rmdup.atac{ext2}.bdg"
     output:
-        bw = "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bw"
+        bw = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bw"
     params:
-        qft = "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
-        st = "{sample}/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
+        qft = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
+        st = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
     run:
         shell("bedtools slop -i {input} -g {config[chromSize]} -b 0 | bedClip stdin {config[chromSize]} {params.qft}")
         shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
