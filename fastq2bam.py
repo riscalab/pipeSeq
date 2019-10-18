@@ -9,10 +9,14 @@ start = time.time()
 
 # parameters needed to insert as argruments to execute
 inputs = [
-    # how many cores to run (integer, i.e. 14)
+    # how many cores to run (integer, i.e. 2)
     'core',
+    # working directory for analysis
+    'workingDir',
     # directory with fastq files (string, i.e. path/to/fastq)
-    'fastqDir'
+    'fastqDir',
+    # sample to process (THIS WILL BE AUTOMATICALLY FILLED BY SLURM ARRAY JOB SUBMISSION)
+    'sample'
 ]
 
 # optional tags
@@ -36,12 +40,15 @@ optTags = {
 
 if __name__ == '__main__':
     # make sure user has specified number of cores and working directory
-    if len(sys.argv)-1 < 2:
-       print('need at least 2 arguments: how many cores to run pipeline and where the fastq files are (i.e. working directory)')
+    if len(sys.argv)-1 < 4:
+       print('need at least 4 arguments: how many cores to run pipeline, desired working directory, where the fastq files are, and sample name' + 
+		' (slurm array job should complete automatically)')
        sys.exit(0)
     # gather number of cores and working directory
-    cores = sys.argv[1]
-    wd = sys.argv[2]
+    cores = sys.argv[1].strip()
+    wd = sys.argv[2].strip()
+    fastqDir = sys.argv[3].strip()
+    sample = sys.argv[4].strip()
     # look for optional tags
     addedTags = ''
     snakeFlags = ''
@@ -62,6 +69,7 @@ if __name__ == '__main__':
     os.chdir(wd)
     dir_path = os.path.dirname(os.path.realpath(__file__))
     # execute snakemake and pass to Snakefile with proper configs
-    os.system('snakemake --snakefile ' + dir_path + '/Snakefile --rerun-incomplete --cores ' + cores + ' ' + snakeFlags + ' --config' + addedTags)
+    os.system('snakemake --snakefile ' + dir_path + '/Snakefile --rerun-incomplete --cores ' + cores + ' ' + snakeFlags + ' --config' + 
+		" 'fastqDir" + '="' + fastqDir + '"' + "' 'sample" +  '="' + sample + '"' + "'" + addedTags)
     stop = time.time()
     print('ran took ' + str(1.0*(stop - start)/(60*60)) + ' hours')

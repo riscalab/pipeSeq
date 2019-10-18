@@ -17,12 +17,6 @@ import datetime
 
 # functions are found in helper.py file
 
-# determine if there are index fastq files
-if config['index'] == 'True':
-    TAGS = ['R1', 'R2', 'I1', 'I2'] 
-else:
-    TAGS = ['R1', 'R2']
-
 wildcard_constraints:
     post_tag = "\d+"
 
@@ -33,36 +27,23 @@ wildcard_constraints:
 align = "(bowtie2 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS -o {output.bam}) 2>{output.alignLog}"
 
 ################################
-# organize sample directories (0)
-################################
-
-rule createSampleDirectories:
-    input:
-        "{pre_tag}_{tag}_{post_tag}.fastq.gz"
-    output:
-        "{config[sample]}/{pre_tag}_{tag}_{post_tag}.fastq.gz"
-    shell:
-        "mv {input} {output}"
-
-################################
 # trim adapters (1)
 ################################
 
 rule trimAdapters:
-    input:
-        expand("{{config[sample]}}/{{pre_tag}}_{tag}_{{post_tag}}.fastq.gz", tag=TAGS), # move all files to config[sample] dirs
-        r1 = "{config[sample]}/{pre_tag}_R1_{post_tag}.fastq.gz",
-        r2 = "{config[sample]}/{pre_tag}_R2_{post_tag}.fastq.gz"
     output:
-        r1 = "{config[sample]}/{pre_tag}_R1_{post_tag}.trim.fastq.gz",
-        r2 = "{config[sample]}/{pre_tag}_R2_{post_tag}.trim.fastq.gz"
+        "{config[sample]}/{pre_tag}_R1_{post_tag}.trim.fastq.gz",
+        "{config[sample]}/{pre_tag}_R2_{post_tag}.trim.fastq.gz"
     params:
-        r1 = "{pre_tag}_R1_{post_tag}.trim.fastq.gz",
-        r2 = "{pre_tag}_R2_{post_tag}.trim.fastq.gz"
+        r1temp = "{pre_tag}_R1_{post_tag}.trim.fastq.gz",
+        r2temp = "{pre_tag}_R2_{post_tag}.trim.fastq.gz",
+        r1inp = "{config[source]}/{pre_tag}_R1_{post_tag}.fastq.gz"
+        r2inp = "{config[source]}/{pre_tag}_R2_{post_tag}.fastq.gz"
     run:
-        shell(workflow.basedir + "/scripts/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {config[sample]}/adapter_trim.log")
-        shell("mv {params.r1} {config[sample]}/")
-        shell("mv {params.r2} {config[sample]}/")
+        shell("mkdir {config[sample]}")
+        shell(workflow.basedir + "/scripts/pyadapter_trimP3.py -a {params.r1inp} -b {params.r2inp} > {config[sample]}/adapter_trim.log")
+        shell("mv {params.r1temp} {config[sample]}/")
+        shell("mv {params.r2temp} {config[sample]}/")
 
 ################################
 # QC of fastq files (2)
@@ -96,7 +77,7 @@ rule alignInserts_and_fastqScreen:
         alignLog = "{config[sample]}/{pre_tag}_{post_tag}.trim.alignlog",
     params:
         screen = "screen.log"
-    threads: 2
+    threads: 3
     run:
         shell(align) # align command defined above
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {config[sample]}_{params.screen}")
@@ -122,8 +103,8 @@ rule mergeBamIfNecessary:
             print('sample {config[sample]} was sequenced in more than one lane; merging BAMs!')
             input_string = ''
             for inp in input:
-                input_string += 'I=' + inp ' '
-            shell("picard MergeSamFiles " + input_string + " O={output}")
+                input_string += inp ' '
+            shell("samtools merge " + " {output} " + input_string) 
 
 ################################
 # sort bam files for filtering (4)
@@ -203,7 +184,7 @@ rule filter_removeDups_and_enrichTSS:
             shell("echo 'Did not filter by mapping quality.' >> {params.filterLog}")
         # histogram with duplicates
         shell("echo 'Histogram with duplicates'")
-        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histDupsLog} H={params.histDupsPDF} W=600 STOP_AFTER=5000000")
+        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histDupsLog} H={params.histDupsPDF} W={config[maxFragSize]} STOP_AFTER=5000000")
         # remove duplicates
         shell("echo 'Removing duplicates'")
         tmp = ftp.split('.bam')[0] + '.rmdup.bam'
@@ -212,7 +193,7 @@ rule filter_removeDups_and_enrichTSS:
         # histogram without duplicates
         shell("samtools index " + ftp)
         shell("echo 'Histogram without duplicates'")
-        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=600 STOP_AFTER=5000000")
+        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W={config[maxFragSize]} STOP_AFTER=5000000")
         # TSS enrichment if provided
         if os.path.exists(config["TSS"]):
             tmp = ftp + '.RefSeqTSS'
@@ -223,79 +204,5 @@ rule filter_removeDups_and_enrichTSS:
         shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi") 
         shell("mv {config[sample]}/*.all.bam {config[sample]}/00_source/")
         shell("mv {config[sample]}/*.chrM.bam {config[sample]}/00_source/")
-
-################################
-# combine insert plots and summary (7)
-################################
-
-rule fastq2bamSummary:
-    input:
-        helper.customFileExpand(
-            helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                ".trim.st.all.blft.qft.rmdup.bam",
-                ".trim.st.all.qft.rmdup.bam",
-                ".trim.st.all.blft.rmdup.bam",
-                ".trim.st.all.rmdup.bam"
-            ), config['exclude']
-        )
-    output:
-        "fastq2bamRunSummary.log"
-    params:
-        files = np.unique(list(helper.findFiles(config['exclude']).keys())), # order the config[sample]s
-        temp = "tempSummary_fastq.log"
-    run:
-        # make nice pdf of insert distributions
-        libs = "libsTEMP_fastq.txt"
-        with open(libs, "w") as f:
-            for i in params.files:
-                f.write(i + '\n')
-        shell("Rscript " + workflow.basedir + "/scripts/plotisds_v2.R " + libs + " hist_data_withoutdups")
-        shell("rm " + libs)
-        print('\n###########################')
-        print('fastq2bam pipeline complete')
-        print('\n###########################')
-        with open(output[0], "w") as f:
-            f.write('user: ' + os.environ.get('USER') + '\n')
-            f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
-            f.write("SOFTWARE\n")
-            f.write("########\n")
-            f.write("python version: " + str(sys.version_info[0]) + '\n')
-            f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
-            f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
-            f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
-            f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
-            f.write("picard version: 2.20.2-SNAPSHOT" + '\n') # DONT LIKE THIS but the following wont work #+ os.popen("picard SortSam --version").read() + '\n')
-            f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n\n')
-            f.write("PARAMETERS\n")
-            f.write("##########\n")
-            f.write("genome reference for aligning: " + config["genomeRef"] + '\n')
-            f.write("blacklist for filtering: " + config["blacklist"] + '\n')
-            f.write("map quality threshold for filtering: " + config["mapq"] + '\n')
-            f.write("align command: " + align + '\n\n')
-            f.write("SUMMARY\n")
-            f.write("#######\n")
-            # summary stats over the samples
-            with open(params.temp, "w") as g:
-                g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tMAX_MYCOPLASMA_MAP\n")
-                for ftp in params.files:
-                    g.write(ftp + '\t')
-                    g.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
-                    g.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
-                    g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
-                    g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
-                    shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
-                    g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
-                    g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
-                    if os.path.exists(config["TSS"]):
-                        g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
-                    else:
-                        g.write("NA" +'\t')
-                    g.write(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*R1*trim_screen.txt " + """| awk '{{printf("%.2f%\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip() + '\n')
-                    # finish clean up by moving index file
-                    shell("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/") 
-                    shell("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
-        # append summary log to rest of summary
-        shell("cat {params.temp} | column -t >> {output}")
-        shell("rm {params.temp}")
 
 
