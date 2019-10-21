@@ -1,7 +1,7 @@
 #! usr/bin/env snakemake
 # npagane | 190701 | risca lab | snakefile including main rules and target rule
 
-import .rules.helper as helper
+import rules.helper as helper
 
 ################################
 # pipeline output check
@@ -23,4 +23,3 @@ rule all:
 ################################
 
 include: "rules/fastq2bam.smk"
-

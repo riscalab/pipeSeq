@@ -37,10 +37,10 @@ rule trimAdapters:
     params:
         r1temp = "{pre_tag}_R1_{post_tag}.trim.fastq.gz",
         r2temp = "{pre_tag}_R2_{post_tag}.trim.fastq.gz",
-        r1inp = "{config[source]}/{pre_tag}_R1_{post_tag}.fastq.gz"
+        r1inp = "{config[source]}/{pre_tag}_R1_{post_tag}.fastq.gz",
         r2inp = "{config[source]}/{pre_tag}_R2_{post_tag}.fastq.gz"
     run:
-        shell("mkdir {config[sample]}")
+        shell("if [ ! -d {config[sample]} ]; then mkdir {config[sample]}; fi")
         shell(workflow.basedir + "/scripts/pyadapter_trimP3.py -a {params.r1inp} -b {params.r2inp} > {config[sample]}/adapter_trim.log")
         shell("mv {params.r1temp} {config[sample]}/")
         shell("mv {params.r2temp} {config[sample]}/")
@@ -92,18 +92,18 @@ rule alignInserts_and_fastqScreen:
 
 rule mergeBamIfNecessary:
     input:
-        expand("{{config[sample]}}/{{config[sample]}}{lane}{{post_tag}}.trim.unmerged.bam", lane=helper.dertermine_lanes(config[sample])),
+        expand("{{config[sample]}}/{{config[sample]}}{lane}{{post_tag}}.trim.unmerged.bam", lane=helper.dertermine_lanes(config["fastqDir"], config["sample"])),
     output:
         "{config[sample]}/{config[sample]}_{post_tag}.trim.bam"
     run:
-        if len(input) == 1:
+        if (len(input) == 1):
             print('sample {config[sample]} was sequenced in one lane')
             shell("mv {input} {output}")
         else:
             print('sample {config[sample]} was sequenced in more than one lane; merging BAMs!')
             input_string = ''
             for inp in input:
-                input_string += inp ' '
+                input_string += inp + ' '
             shell("samtools merge " + " {output} " + input_string) 
 
 ################################

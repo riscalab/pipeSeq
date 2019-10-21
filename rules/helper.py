@@ -15,19 +15,17 @@ def findFiles(fastqDir, samp):
     WHOLEFILES = {}
     for base, dirs, files in os.walk(fastqDir):
         for fastq in files:
-            if fastq.endswith(".fastq.gz") and not fastq.startswith("Undetermined") and samp in fastq:
+            if fastq.endswith(".fastq.gz") and samp in fastq:
                 tmp1 = fastq.split(".fastq.gz")[0]
                 tmp2 = tmp1.split('_')[0]
-                # check for exclusion
-                if tmp2 not in exclude:
-                    if tmp2 not in WHOLEFILES.keys():
-                        WHOLEFILES[tmp2] = []
-                    WHOLEFILES[tmp2].append(tmp1.split('_'))
+                if tmp2 not in WHOLEFILES.keys():
+                    WHOLEFILES[tmp2] = []
+                WHOLEFILES[tmp2].append(tmp1.split('_'))
     return WHOLEFILES
 
 # generate structure of expected files 
 def customFileExpand(ext, fastqDir, samp, dir = ''):
-    WHOLEFILES = findFiles(samp)
+    WHOLEFILES = findFiles(fastqDir, samp)
     strout = []
     for sample in WHOLEFILES.keys():
         parts = list(set(WHOLEFILES[sample][0]) & set(WHOLEFILES[sample][1])) # may be up to 4 but has to have at least 2
@@ -60,18 +58,18 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
     return fpt
 
 # determine lanes that a certain sample was run through 
-#  THIS FUNCTION ASSUMES THAT THE DIRECTORY IS ORGANIZED BY SAMPLE/SAMPLE*.BAM
-def dertermine_lanes(sample):
+def dertermine_lanes(fastqDir, sample):
     lanes = []
-    for ftp in os.listdir('./' + sample):
-        if ftp.endswith(".bam"):
-            tmp1 = fastq.split(".bam")[0]
-            if (sample == tmp1.split('_')[0]):
-                if 'L00' in tmp1:
-                    lanes.append('_L00' + tmp1.split('L00')[1][0] + '_')
-    if len(lanes) == 0:
-        lanes.append('_')
-    return lanes
+    for base, dirs, files in os.walk(fastqDir):
+        for ftp in files:
+            if ftp.endswith(".fastq.gz") and sample in ftp:
+                tmp1 = ftp.split(".fastq.gz")[0]
+                if (sample == tmp1.split('_')[0]):
+                    if 'L00' in tmp1:
+                        lanes.append('_L00' + tmp1.split('L00')[1][0] + '_')
+        if len(lanes) == 0:
+            lanes.append('_')
+        return lanes
 
 ################################
 # combine insert plots and summary (7)
@@ -116,7 +114,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
                 g.write(ftp + '\t')
                 g.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
                 g.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
-		g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
+                g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 shell("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
                 g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
@@ -181,7 +179,7 @@ def ATACseqSummary(sampleTxt, chromSize):
 #########################
 # summary stats
 if __name__ == '__main__':
-    run=sys.argv(1)
+    run=int(sys.argv(1))
     if (not run):
         sampleTxt=sys.argv(2)
         genomeRef=sys.argv(3)
