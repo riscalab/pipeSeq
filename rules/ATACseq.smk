@@ -1,4 +1,4 @@
-#! usr/bin/env snakemake
+# usr/bin/env snakemake
 ## npagane | 190701 | risca lab | ATACseq pipeline rules
 
 # include this file to incororporate these rules into a Snakefile for execution

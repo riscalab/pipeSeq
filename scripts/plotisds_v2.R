@@ -1,1 +1,0 @@
-../../fastq2bam/scripts/plotisds_v2.R
