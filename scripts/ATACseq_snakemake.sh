@@ -16,7 +16,7 @@ mapq=$7
 chromSize=$8
 snakemake=$9
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/npagane/ATACseq" # "/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam" #"/rugpfs/fs0/risc_lab/store/npagane/ATACseq" 
 
 ###########
 # EXECUTE #

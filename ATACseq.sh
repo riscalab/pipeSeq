@@ -6,14 +6,14 @@
 ##################
 
 # set the default arguments for optional parameters
-genomeRef="/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
-blacklist="/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
+genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index"
+blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
 TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
 mapq=30
 chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/npagane/ATACseq" #"/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq" #"/rugpfs/fs0/risc_lab/store/npagane/ATACseq"
 
 # parse the arguments
 while getopts c:f:s:g:b:t:m:z:p: option
