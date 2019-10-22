@@ -21,7 +21,7 @@ where:
     <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
     -<opts> additional options:
         -g = genome reference for alignment (string, i.e. path/to/genome)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index"
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
         -b = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
         -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
