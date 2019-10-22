@@ -8,41 +8,39 @@ setup
 #####
 
 ATACseq MUST be adjacent to fastq2bam to allow for the relative path symlinks to work!
+**FASTQ2BAM MUST BE DOWNLOADED FOR ATACSEQ TO WORK**
 
 ######
 to run
 ######
 
-python ATACseq.py <1> <2> --<opts>
-
+bash ATACseq.sh -c <1> -f <2> -s <3> -<opts>
 where:
-    <1> =  how many cores to run pipeline with (integer, i.e. 14)
-    <2> = directory with fastq/bam files and desired working directory (string, i.e. path/to/fastq)
-    --<opts> additional options:
-        --genomeRef = genome reference for alignment (string, i.e. path/to/genome)
-            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
-        --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
-            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
-        --TSS = BED file of TSS for that genome (string, i.e. path/to/TSS)
+    <1> = desired working directory for processing (string, i.e. path/to/dir)
+    <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
+    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
+    -<opts> additional options:
+        -g = genome reference for alignment (string, i.e. path/to/genome)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index"
+        -b = blacklist for filtering (string, i.e. path/to/blacklist)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
             default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
-        --mapq = the map quality threshold for alignment (int, i.e. 30)
+        -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
-        --index = whether there are fastq files for the index reads or not (boolean, i.e. True)
-            default: "False"
-        --exclude = exclusion file to exclude certain samples from analysis (path/to/exclude)
+        -p = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
-        --snakemake = any snakemake flags for compilation (string, i.e. unlock)
-            default: ""
-        --chromSize = sizes of chromosomes (string, i.e. path/to/genome/file)
+        -z = sizes of chromosomes (string, i.e. path/to/genome/file)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 
-* for each snakemake flag desired, you must use the --snakemake tag preceding the flags (without "--" for the flags)
+* example *
+bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
 
 ###########
 environment
 ###########
 
-start cluster submission file with:
+must be in ATACseq conda environment
     source activate ATACseq
     echo `which python` # confirms you are in correct env
 
@@ -56,7 +54,7 @@ the yml file is then symlinked to the envs/ directory
 file structure
 ##############
 
-ATACseq.py <executable>
+ATACseq.sh <executable>
 Snakefile <constructs pipeline from rules>
 rules/* <rules for executable pipeline with helper code>
 scripts/* <R, python, or bash scripts to call in pipeline>
