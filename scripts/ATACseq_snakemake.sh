@@ -27,7 +27,7 @@ source activate ATACseq
 echo `which python`
 
 # determine sample
-SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p sample.txt)
+SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sampleText)
 echo $SAMPLE
 
 # run code
