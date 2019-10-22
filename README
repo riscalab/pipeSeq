@@ -7,34 +7,32 @@ npagane | 190628 | risca lab
 to run
 ######
 
-python fastq2bam.py <1> <2> --<opts>
+bash fastq2bam.sh -c <1> -f <2> -s <3> -<opts>
 
 where:
-    <1> =  how many cores to run pipeline with (integer, i.e. 18)
-    <2> = directory with fastq files and desired working directory (string, i.e. path/to/fastq)
-    --<opts> additional options:
-        --genomeRef = genome reference for alignment (string, i.e. path/to/genome)
-            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/genomes/Homo_sapiens/UCSC/hg38/Sequence/Bowtie2Index/genome"
-        --blacklist = blacklist for filtering (string, i.e. path/to/blacklist)
-            default: "/rugpfs/fs0/risc_lab/scratch/nvelez/blacklists/ATAC_blacklist.bed"
-        --TSS = BED file of TSS for that genome (string, i.e. path/to/TSS)
-            default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
-        --mapq = the map quality threshold for alignment (int, i.e. 30)
+    <1> = desired working directory for processing (string, i.e. path/to/dir)
+    <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
+    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
+    -<opts> additional options:
+        -g = genome reference for alignment (string, i.e. path/to/genome)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index"
+        -b = blacklist for filtering (string, i.e. path/to/blacklist)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
+            default: "None"
+        -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
-        --index = whether there are fastq files for the index reads or not (boolean, i.e. True)
-            default: "False"
-        --exclude = exclusion file to exclude certain samples from analysis (string, i.e. path/to/exclude)
-            default: ""
-        --snakemake = any snakemake flags for compilation (string, i.e. unlock)
+        -p = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
 
-* for each snakemake flag desired, you must use the --snakemake tag preceding the flags (without "--" for the flags)
+* example *
+bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
 
 ###########
 environment
 ###########
 
-start cluster submission file with:
+must be in fastq2bam conda environment
     source activate fastq2bam
     echo `which python` # confirms you are in correct env
 
@@ -42,7 +40,7 @@ start cluster submission file with:
 file structure
 ##############
 
-fastq2bam.py <executable>
+fastq2bam.sh <executable>
 Snakefile <constructs pipeline through including rules>
 rules/* <rules for pipeline along with any helper files>
 scripts/* <R, python, or bash scripts to call in pipeline>
