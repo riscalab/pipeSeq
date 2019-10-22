@@ -12,35 +12,31 @@ import numpy as np
 
 # determine sample names and sample numbers from the working directory
 def findFiles(fastqDir, samp): 
-    WHOLEFILES = {}
+    WHOLEFILES = []
     for base, dirs, files in os.walk(fastqDir):
         for fastq in files:
             if fastq.endswith(".fastq.gz") and samp in fastq:
                 tmp1 = fastq.split(".fastq.gz")[0]
-                tmp2 = tmp1.split('_')[0]
-                if tmp2 not in WHOLEFILES.keys():
-                    WHOLEFILES[tmp2] = []
-                WHOLEFILES[tmp2].append(tmp1.split('_'))
+                WHOLEFILES.append(tmp1.split('_'))
     return WHOLEFILES
 
 # generate structure of expected files 
 def customFileExpand(ext, fastqDir, samp, dir = ''):
     WHOLEFILES = findFiles(fastqDir, samp)
     strout = []
-    for sample in WHOLEFILES.keys():
-        parts = list(set(WHOLEFILES[sample][0]) & set(WHOLEFILES[sample][1])) # may be up to 4 but has to have at least 2
-        uniq, inds = np.unique(WHOLEFILES[sample][0], return_index = True)
-        if dir == '':
-            ftp = sample + '/'
-        else:
-            ftp = sample + '/' + dir + '/'
-        for i in range(len(inds)):
-            ind = inds.tolist().index(i)
-            if uniq[ind] in parts:
-                ftp += uniq[ind] + '_'
-        ftp = ftp[0:-1] # remove last character to then add extension
-        ftp += ext
-        strout.append(ftp)
+    parts = list(set(WHOLEFILES[0]) & set(WHOLEFILES[-1])) # may be up to 4 but has to have at least 2
+    uniq, inds = np.unique(WHOLEFILES[0], return_index = True)
+    if dir == '':
+        ftp = samp + '/'
+    else:
+        ftp = samp + '/' + dir + '/'
+    for i in range(len(inds)):
+        ind = inds.tolist().index(i)
+        if uniq[ind] in parts:
+            ftp += uniq[ind] + '_'
+    ftp = ftp[0:-1] # remove last character to then add extension
+    ftp += ext
+    strout.append(ftp)
     return strout
 
 # conditional expand function upon 2 conditions for inputs/output
@@ -58,25 +54,22 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
     return fpt
 
 # determine lanes that a certain sample was run through 
-def dertermine_lanes(fastqDir, sample):
+def dertermine_lanes(fastqDir, samp):
     lanes = []
-    for base, dirs, files in os.walk(fastqDir):
-        for ftp in files:
-            if ftp.endswith(".fastq.gz") and sample in ftp:
-                tmp1 = ftp.split(".fastq.gz")[0]
-                if (sample == tmp1.split('_')[0]):
-                    if 'L00' in tmp1:
-                        lanes.append('_L00' + tmp1.split('L00')[1][0] + '_')
-        if len(lanes) == 0:
+    for reads in findFiles(fastqDir, samp):
+        for part in reads:
+            if 'L00' in part:
+                lanes.append('_L00' + part.split('L00')[1][0] + '_')
+    if len(lanes) == 0:
             lanes.append('_')
-        return lanes
+    return list(set(lanes))
 
 ################################
 # combine insert plots and summary (7)
 ################################
 def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
     output="fastq2bamRunSummary.log"
-    align = "(bowtie2 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS -o {output.bam}) 2>{output.alignLog}" # need to update this whenever the command in the fastq2bam.smk file changes, dont like this but better than makign the command blind (placing it here) and then importing it 
+    align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
     files = []
     with open(sampleTxt, 'r') as ftp:
         for line in ftp:
