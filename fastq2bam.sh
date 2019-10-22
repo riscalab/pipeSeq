@@ -12,7 +12,7 @@ TSS="None"
 mapq=30
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" #"/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam" #"/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" 
 
 # parse the arguments
 while getopts c:f:s:g:b:t:m:p: option
