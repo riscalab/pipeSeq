@@ -35,16 +35,15 @@ bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {outp
 
 rule ATACoffset:
     input:
-        "fastq2bamRunSummary.log", # ensure summary log
-        bam = "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.bam"
+        config['sample'] + "/{pre_tag}_{post_tag}{ext}.rmdup.bam"
     output:
-        "{config[sample]}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bam"
+        config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bam"
     params:
-        "{config[sample]}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.temp.bam"
+        config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.temp.bam"
     threads: 2
     run:
-        shell("samtools index {input.bam}") # suppress the pysam/htslib warning about the index file
-        shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input.bam} -o {params}")
+        shell("samtools index {input}") # suppress the pysam/htslib warning about the index file
+        shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input} -o {params}")
         shell("samtools sort -O bam -o {output} {params}") #sort (dont use picard it is too strict about bam formatting)
         shell("samtools index {output}") # regenerate index file
         shell("rm {params}")
@@ -55,11 +54,11 @@ rule ATACoffset:
 
 rule callPeakSummits:
     input:
-        "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.atac.bam"
+        config['sample'] + "/{pre_tag}_{post_tag}{ext}.rmdup.atac.bam"
     output:
-        expand("{{config[sample]}}/peakCalls/{{config[sample]}}_{{post_tag}}{{ext,.*}}.rmdup.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak", "_treat_pileup.bdg", "_control_lambda.bdg"])
+        expand(config['sample'] + "/peakCalls/{{pre_tag}}_{{post_tag}}{{ext,.*}}.rmdup.atac{end}", end=["_summits.bed", "_peaks.xls", "_peaks.narrowPeak", "_treat_pileup.bdg", "_control_lambda.bdg"])
     params:
-        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac"
+        config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -71,10 +70,10 @@ rule callPeakSummits:
 
 rule bam2bed:
     input:
-        "{config[sample]}/{config[sample]}_{post_tag}{ext}.rmdup.atac.bam"
+        config['sample'] + "/{pre_tag}_{post_tag}{ext}.rmdup.atac.bam"
     output:
-        bg = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bdg",
-        bed = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac.bed"
+        bg = config['sample'] + "/tracks/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bdg",
+        bed = config['sample'] + "/tracks/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bed"
     run:
         shell("bedtools bamtobed -i {input} > {output.bed}") # bam to bed necessary for bigwig analysis
         shell(bam2bg) # bam to bedgraph command defined above
@@ -86,10 +85,10 @@ rule bam2bed:
 
 rule makeBedGraphSignalFC:
     input:
-        treat = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
-        control = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg"
+        treat = config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
+        control = config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg"
     output:
-        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
+        config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -102,11 +101,11 @@ rule makeBedGraphSignalFC:
 
 rule makeBedGraphSignalPval:
     input:
-        treat = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
-        control = "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg",
-        bed = "{config[sample]}/tracks/{config[sample]}_{post_tag}{ext}.rmdup.atac.bed"
+        treat = config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_treat_pileup.bdg",
+        control = config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext}.rmdup.atac_control_lambda.bdg",
+        bed = config['sample'] + "/tracks/{pre_tag}_{post_tag}{ext}.rmdup.atac.bed"
     output:
-        "{config[sample]}/peakCalls/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac_pval.bdg"
+        config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_pval.bdg"
     conda:
         "../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
@@ -118,16 +117,14 @@ rule makeBedGraphSignalPval:
 
 rule bedGraph2bigWig:
     input:
-        "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext}.rmdup.atac{ext2}.bdg"
+        config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext}.rmdup.atac{ext2}.bdg"
     output:
-        bw = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bw"
+        bw = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bw"
     params:
-        qft = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
-        st = "{config[sample]}/{dir}/{config[sample]}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
+        qft = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
+        st = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
     run:
         shell("bedtools slop -i {input} -g {config[chromSize]} -b 0 | bedClip stdin {config[chromSize]} {params.qft}")
         shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
         shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
         shell("rm {params.qft} {params.st}")
-
-       shell("rm {params.temp}")

@@ -32,5 +32,5 @@ echo $SAMPLE
 
 # run code
 cd $cwd
-snakemake --snakefile $exeDir/Snakefile --rerun-incomplete --cores 3 $snakemake --config "fastqDir=$fastqDir" "genomeRef=$genomeRef" "blacklist=$blacklist" "TSS=$TSS" "mapq=$mapq" "chromSize=$chromSize" "sample=$SAMPLE" 
+snakemake --snakefile $exeDir/Snakefile --rerun-incomplete --cores 3 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "chromSize='$chromSize'" "sample='$SAMPLE'" 
 
