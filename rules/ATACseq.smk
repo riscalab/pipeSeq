@@ -40,7 +40,7 @@ rule ATACoffset:
         config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.bam"
     params:
         config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac.temp.bam"
-    threads: 2
+    threads: 6
     run:
         shell("samtools index {input}") # suppress the pysam/htslib warning about the index file
         shell("alignmentSieve --numberOfProcessors {threads} --ATACshift --bam {input} -o {params}")
