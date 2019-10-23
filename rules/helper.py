@@ -13,7 +13,7 @@ import numpy as np
 # determine sample names and sample numbers from the working directory
 def findFiles(fastqDir, samp): 
     WHOLEFILES = []
-    for base, dirs, files in os.walk(fastqDir):
+    for base, dirs, files in os.walk(fastqDir + "/"):
         for fastq in files:
             if fastq.endswith(".fastq.gz") and samp == fastq.split("_")[0]:
                 tmp = fastq.split(".fastq.gz")[0]
