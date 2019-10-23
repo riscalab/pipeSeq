@@ -15,8 +15,8 @@ TSS=$6
 mapq=$7
 snakemake=$8
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam" #"/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" 
-
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam"
 
 ###########
 # EXECUTE #

@@ -15,16 +15,19 @@ def findFiles(fastqDir, samp):
     WHOLEFILES = []
     for base, dirs, files in os.walk(fastqDir):
         for fastq in files:
-            if fastq.endswith(".fastq.gz") and samp in fastq:
-                tmp1 = fastq.split(".fastq.gz")[0]
-                WHOLEFILES.append(tmp1.split('_'))
+            if fastq.endswith(".fastq.gz") and samp == fastq.split("_")[0]:
+                tmp = fastq.split(".fastq.gz")[0]
+                WHOLEFILES.append(tmp.split('_'))
     return WHOLEFILES
 
 # generate structure of expected files 
 def customFileExpand(ext, fastqDir, samp, dir = ''):
     WHOLEFILES = findFiles(fastqDir, samp)
     strout = []
-    parts = list(set(WHOLEFILES[0]) & set(WHOLEFILES[-1])) # may be up to 4 but has to have at least 2
+    parts = set(WHOLEFILES[0])
+    for i in range(1, len(WHOLEFILES)):
+        parts = set(parts & set(WHOLEFILES[i]))
+    parts=list(parts)
     uniq, inds = np.unique(WHOLEFILES[0], return_index = True)
     if dir == '':
         ftp = samp + '/'
