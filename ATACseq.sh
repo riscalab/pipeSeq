@@ -13,7 +13,8 @@ mapq=30
 chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq" #"/rugpfs/fs0/risc_lab/store/npagane/ATACseq"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq" 
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/ATACseq"
 
 # parse the arguments
 while getopts c:f:s:g:b:t:m:z:p: option
