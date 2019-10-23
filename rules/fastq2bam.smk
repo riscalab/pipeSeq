@@ -193,7 +193,7 @@ rule filter_removeDups_and_enrichTSS:
         # histogram without duplicates
         shell("samtools index " + ftp)
         shell("echo 'Histogram without duplicates'")
-        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W={config[maxFragSize]} STOP_AFTER=5000000")
+        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histNoDupsLog} H={params.histNoDupsPDF} W=1000 STOP_AFTER=5000000")
         # TSS enrichment if provided
         if os.path.exists(config["TSS"]):
             tmp = ftp + '.RefSeqTSS'
