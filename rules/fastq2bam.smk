@@ -184,7 +184,7 @@ rule filter_removeDups_and_enrichTSS:
             shell("echo 'Did not filter by mapping quality.' >> {params.filterLog}")
         # histogram with duplicates
         shell("echo 'Histogram with duplicates'")
-        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histDupsLog} H={params.histDupsPDF} W={config[maxFragSize]} STOP_AFTER=5000000")
+        shell("picard CollectInsertSizeMetrics I=" + ftp + " O={params.histDupsLog} H={params.histDupsPDF} W=1000 STOP_AFTER=5000000")
         # remove duplicates
         shell("echo 'Removing duplicates'")
         tmp = ftp.split('.bam')[0] + '.rmdup.bam'
