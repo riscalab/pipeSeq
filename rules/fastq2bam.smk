@@ -77,7 +77,7 @@ rule alignInserts_and_fastqScreen:
         alignLog = config['sample'] + "/{pre_tag}_{post_tag}.trim.alignlog",
     params:
         screen = "screen.log"
-    threads: 3
+    threads: 6
     run:
         shell(align) # align command defined above
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {config[sample]}_{params.screen}")
