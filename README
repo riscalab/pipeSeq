@@ -22,11 +22,20 @@ where:
             default: "None"
         -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
-        -p = any snakemake flags for compilation (string, i.e. unlock)
+        -p = any snakemake flags for compilation (string, i.e. --forcerun RULE)
             default: ""
 
 * example *
 bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
+######
+unlock
+######
+
+if you need to cancel a remote run (i.e. scancel), then you need to unlock the directories that snakemake locked by
+exiting too early. run the unlock.sh script as:
+* example *
+bash scripts/unlock.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
 
 ###########
 environment
