@@ -180,7 +180,7 @@ if __name__ == '__main__':
     run=int(sys.argv[1])
     if (not run):
         sampleTxt=sys.argv[2]
-        genomeRef=sys.argv[3)]
+        genomeRef=sys.argv[3]
         blacklist=sys.argv[4]
         mapq=sys.argv[5]
         TSS=sys.argv[6]
