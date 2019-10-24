@@ -53,21 +53,8 @@ else
    fastq2bamID=$(echo ${fastq2bam} | grep -oh "[1-9][0-9]*$")
 fi
 
-# check that the pipeline did anything
-sums=0
-for i in 1, $numSamples
-do
-    if [ `cat "slurm-${fastq2bamID}_{$i}.out" | grep "Nothing to be done." | wc -l` -eq 1 ] 
-    then
-        sums=$((sums+1))
-    fi
-done
-
 # summary stats for fastq2bam after successful completion
-if [ $sums -lt $numSamples ]
-then 
-    fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS")
-fi
+fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS")
 
 # get job id
 if ! echo ${fastq2bamSummary} | grep -q "[1-9][0-9]*$"; then
@@ -91,4 +78,4 @@ else
 fi
 
 # summary stats for ATACseq after successful completion
-sbatch --depend=afterok:$ATACseqID --wrap="python $exeDir//rules/helper.py 1 $ATACseqID $sampleText $chromSize"
+sbatch --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize"
