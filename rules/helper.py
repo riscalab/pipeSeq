@@ -182,14 +182,27 @@ def ATACseqSummary(sampleTxt, chromSize):
 # summary stats
 if __name__ == '__main__':
     run=int(sys.argv[1])
-    if (not run):
-        sampleTxt=sys.argv[2]
-        genomeRef=sys.argv[3]
-        blacklist=sys.argv[4]
-        mapq=sys.argv[5]
-        TSS=sys.argv[6]
-        fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS)
+    slurm=sys.argv[2]
+    sampleTxt=sys.argv[3]
+    g=open(sampleTxt, 'r')
+    numSamples=len(g.readlines())
+    g.close()
+    sums=0
+    for i in range(1,numSamples):
+        f=open('slurm-' + slurm + '_' + str(i) + '.out', 'r')
+        dat=f.readlines()
+        if ('Nothing to be done.' in ' '.join(dat)):
+            sums+=1
+        f.close()
+    if (sums < numSamples):
+        if (not run):
+            genomeRef=sys.argv[4]
+            blacklist=sys.argv[5]
+            mapq=sys.argv[6]
+            TSS=sys.argv[7]
+            fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS)
+        else:
+            chromSize=sys.argv[4]
+            ATACseqSummary(sampleTxt, chromSize)
     else:
-        sampleTxt=sys.argv[2]
-        chromSize=sys.argv[3]
-        ATACseqSummary(sampleTxt, chromSize)
+        print('data was not processed further')
