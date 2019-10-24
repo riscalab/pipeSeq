@@ -188,7 +188,7 @@ if __name__ == '__main__':
     numSamples=len(g.readlines())
     g.close()
     sums=0
-    for i in range(1,numSamples):
+    for i in range(1,numSamples+1):
         f=open('slurm-' + slurm + '_' + str(i) + '.out', 'r')
         dat=f.readlines()
         if ('Nothing to be done.' in ' '.join(dat)):
