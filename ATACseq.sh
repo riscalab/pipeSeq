@@ -78,4 +78,4 @@ else
 fi
 
 # summary stats for ATACseq after successful completion
-sbatch --depend=afterok:$ATACseqID --wrap="python }/rules/helper.py 1 $sampleText $chromSize"
+sbatch --depend=afterok:$ATACseqID --wrap="python $exeDir//rules/helper.py 1 $sampleText $chromSize"
