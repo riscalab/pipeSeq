@@ -177,15 +177,15 @@ def ATACseqSummary(sampleTxt, chromSize):
 #########################
 # summary stats
 if __name__ == '__main__':
-    run=int(sys.argv(1))
+    run=int(sys.argv[1])
     if (not run):
-        sampleTxt=sys.argv(2)
-        genomeRef=sys.argv(3)
-        blacklist=sys.argv(4)
-        mapq=sys.argv(5)
-        TSS=sys.argv(6)
+        sampleTxt=sys.argv[2]
+        genomeRef=sys.argv[3)]
+        blacklist=sys.argv[4]
+        mapq=sys.argv[5]
+        TSS=sys.argv[6]
         fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS)
     else:
-        sampleTxt=sys.argv(2)
-        chromSize=sys.argv(3)
+        sampleTxt=sys.argv[2]
+        chromSize=sys.argv[3]
         ATACseqSummary(sampleTxt, chromSize)
