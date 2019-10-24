@@ -36,6 +36,15 @@ where:
 * example *
 bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
 
+######
+unlock
+######
+
+if you need to cancel a remote run (i.e. scancel), then you need to unlock the directories that snakemake locked by
+exiting too early. run the unlock.sh script as:
+* example *
+bash scripts/unlock.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
 ###########
 environment
 ###########
