@@ -10,6 +10,10 @@ import sys
 # parameters and functions
 ################################
 
+# this is for ease of development
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" 
+
 # defaults for parameters set in fastq2bam.py exectuable file
 
 # determine sample names and sample numbers from the working directory
@@ -81,7 +85,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
             files.append(line.strip())
     temp = "tempSummary_fastq.log"
     # make nice pdf of insert distributions
-    os.system("Rscript " + workflow.basedir + "/scripts/plotisds_v2.R " + sampleTxt + " hist_data_withoutdups")
+    os.system("Rscript " + exeDir + "/scripts/plotisds_v2.R " + sampleTxt + " hist_data_withoutdups")
     print('\n###########################')
     print('fastq2bam pipeline complete')
     print('\n###########################')
