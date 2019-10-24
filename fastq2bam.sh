@@ -52,4 +52,4 @@ else
 fi
 
 # summary stats for fastq2bam after successful completion
-fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $sampleText $genomeRef $blacklist $mapq $TSS")
+sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $sampleText $genomeRef $blacklist $mapq $TSS"
