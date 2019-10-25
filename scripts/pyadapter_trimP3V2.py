@@ -78,7 +78,7 @@ else:
 
 ##### SCRIPT #####
 # initialize variables
-i=0;j=0;k=0;tot_b=0;count=1
+i=0;j=0;k=0;tot_b=0;
 n=options.n  # match seq
 mismatch=1  # only allow 0-1 mismatches for now
 
@@ -92,69 +92,57 @@ elif options.u == True:
 
 while 1:
     # read lines
-    p1_line = p1_rds.readline()
-    p2_line = p2_rds.readline()
+    seqhead1 = p1_rds.readline()
+    seqhead2 = p2_rds.readline()
 
     # break if at end of file
-    if not p1_line:
+    if not seqhead1:
         break
 
     # load fastq into memory
-    if count ==1:
-        seqhead1 = p1_line
-        seqhead2 = p2_line
-    elif count ==2:
-        seq1 = p1_line.rstrip()
-        seq2 = p2_line.rstrip()
-    elif count ==3:
-        qualhead1 = p1_line
-        qualhead2 = p2_line
-    elif count ==4:
-        qual1 = p1_line.rstrip()
-        qual2 = p2_line.rstrip()
+    seq1 = p1_rds.readline().rstrip()
+    seq2 = p2_rds.readline().rstrip()
+    qualhead1 = p1_rds.readline()
+    qualhead2 = p2_rds.readline()
+    qual1 = p1_rds.readline().rstrip()
+    qual2 = p2_rds.readline().rstrip()
 
-        # align reads to themselves
-        i = i+1  # total reads
-        rc_seq2 = reverse_complement(seq2[0:n])
-        idx = seq1.rfind(rc_seq2) # look for perfect match
-        if idx > 0:
-            j = j+1  # 0 mismatchs
-        elif mismatch>0:
-            hold = fuzz_align(rc_seq2,seq1,mismatch)  # else allow for mismatch
-            if hold:
-                idx,mis=hold
-                if mis == 1:
-                    k=k+1  # 1 mismatch
+    # align reads to themselves
+    i = i+1  # total reads
+    rc_seq2 = reverse_complement(seq2[0:n])
+    idx = seq1.rfind(rc_seq2) # look for perfect match
+    if idx > 0:
+        j = j+1  # 0 mismatchs
+    elif mismatch>0:
+        hold = fuzz_align(rc_seq2,seq1,mismatch)  # else allow for mismatch
+        if hold:
+            idx,mis=hold
+            if mis == 1:
+                k=k+1  # 1 mismatch
 
-        # trim reads if idx exist
-        if idx > 0:
-            # keep track on how much trimming
-            tot_b = tot_b+len(seq2[idx+n:-1]) #track total bases trimmed 
+    # trim reads if idx exist
+    if idx > 0:
+        # keep track on how much trimming
+        tot_b = tot_b+len(seq2[idx+n:-1]) #track total bases trimmed 
             
-            # trim data
-            seq1 = seq1[0:idx+n-1] # modified to sub1 because some aligners (bowtie) dont like perfectly overlapping reads
-            seq2 = seq2[0:idx+n-1]
-            qual1 = qual1[0:idx+n-1]
-            qual2 = qual2[0:idx+n-1]
+        # trim data
+        seq1 = seq1[0:idx+n-1] # modified to sub1 because some aligners (bowtie) dont like perfectly overlapping reads
+        seq2 = seq2[0:idx+n-1]
+        qual1 = qual1[0:idx+n-1]
+        qual2 = qual2[0:idx+n-1]
        
-        # print read1
-        r1_write.write(seqhead1)
-        r1_write.write(seq1 + "\n")
-        r1_write.write(qualhead1)
-        r1_write.write(qual1 +"\n")
+    # print read1
+    r1_write.write(seqhead1)
+    r1_write.write(seq1 + "\n")
+    r1_write.write(qualhead1)
+    r1_write.write(qual1 +"\n")
 
-        # print read2
-        r2_write.write(seqhead2)
-        r2_write.write(seq2 + "\n")
-        r2_write.write(qualhead2)
-        r2_write.write(qual2 + "\n")
+    # print read2
+    r2_write.write(seqhead2)
+    r2_write.write(seq2 + "\n")
+    r2_write.write(qualhead2)
+    r2_write.write(qual2 + "\n")
 
-    # increment count
-    count = count + 1
-    if count == 5:
-        count = 1
-    else:
-        count = count
 
 # close files to write the file
 r1_write.close()

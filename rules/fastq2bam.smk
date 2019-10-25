@@ -41,7 +41,14 @@ rule trimAdapters:
         r1 = "{pre_tag}_R1_{post_tag}.trim.fastq.gz",
         r2 = "{pre_tag}_R2_{post_tag}.trim.fastq.gz"
     run:
+        #temp1 = open(input.r1, "rb")
+        #temp2 = open(input.r2, "rb")
+        #if ( ((len(temp1.readlines()) % 4) == 0) and ((len(temp2.readlines()) % 4) == 0) ): # need to fix this
+        #    shell(workflow.basedir + "/scripts/pyadapter_trimP3V2.py -a {input.r1} -b {input.r2} > {config[sample]}/adapter_trim.log")
+        #else:
         shell(workflow.basedir + "/scripts/pyadapter_trimP3.py -a {input.r1} -b {input.r2} > {config[sample]}/adapter_trim.log")
+        #temp1.close()
+        #temp2.close()
         shell("mv {params.r1} {config[sample]}/")
         shell("mv {params.r2} {config[sample]}/")
 
