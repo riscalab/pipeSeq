@@ -76,7 +76,7 @@ def dertermine_lanes(fastqDir, samp):
 ################################
 # combine insert plots and summary (7)
 ################################
-def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
+def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
     output="fastq2bamRunSummary.log"
     align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
     files = []
@@ -114,8 +114,14 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
             g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tMAX_MYCOPLASMA_MAP\n")
             for ftp in files:
                 g.write(ftp + '\t')
-                g.write(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/adapter_trim.log").read().strip() + '\t')
-                g.write(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*.alignlog").read().strip() + '\t')
+                raw_read=0
+                for lane in determine_lanes(fastqDir, ftp):
+                    raw_read+=int(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/*" + lane + "*.adapter_trim.log").read().strip())
+                g.write(raw_read + '\t')
+                palign=0
+                for lane in determine_lanes(fastqDir, ftp):
+                    palign+=float(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*" + lane + "*.alignlog").read().strip()[0:-1])/len(determine_lanes(fastqDir, ftp))
+                g.write(palign + '%\t')
                 g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 os.system("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
@@ -125,7 +131,10 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS):
                     g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
                 else:
                     g.write("NA" +'\t')
-                g.write(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*R1*trim_screen.txt " + """| awk '{{printf("%.2f%\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip() + '\n')
+                mycoplasma=0
+                for lane in determine_lanes(fastqDir, ftp):
+                    mycoplasma+=float(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*" + lane + "*R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+                g.write(mycoplasma + '%/n')
                 # finish clean up by moving index file
                 os.system("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/")
                 os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
@@ -194,13 +203,14 @@ if __name__ == '__main__':
         if ('Nothing to be done.' in ' '.join(dat)):
             sums+=1
         f.close()
-    if True:#(sums < numSamples):
+    if (sums < numSamples):
         if (not run):
             genomeRef=sys.argv[4]
             blacklist=sys.argv[5]
             mapq=sys.argv[6]
             TSS=sys.argv[7]
-            fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS)
+            fastqDir=sys.argv[8]
+            fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir)
         else:
             chromSize=sys.argv[4]
             ATACseqSummary(sampleTxt, chromSize)
