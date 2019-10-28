@@ -63,7 +63,7 @@ def conditionalExpand_2(condition1, condition2, truetrue, truefalse, falsetrue, 
     return fpt
 
 # determine lanes that a certain sample was run through 
-def dertermine_lanes(fastqDir, samp):
+def determine_lanes(fastqDir, samp):
     lanes = []
     for reads in findFiles(fastqDir, samp):
         for part in reads:
@@ -203,7 +203,7 @@ if __name__ == '__main__':
         if ('Nothing to be done.' in ' '.join(dat)):
             sums+=1
         f.close()
-    if (sums < numSamples):
+    if True:#(sums < numSamples):
         if (not run):
             genomeRef=sys.argv[4]
             blacklist=sys.argv[5]

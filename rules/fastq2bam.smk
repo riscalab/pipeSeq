@@ -105,7 +105,7 @@ rule alignInserts_and_fastqScreen:
 
 rule mergeBamIfNecessary:
     input:
-        expand(config['sample'] + "/{{pre_tag}}{lanes}{{post_tag}}.trim.unmerged.bam", lanes=helper.dertermine_lanes(config["fastqDir"], config["sample"]))
+        expand(config['sample'] + "/{{pre_tag}}{lanes}{{post_tag}}.trim.unmerged.bam", lanes=helper.determine_lanes(config["fastqDir"], config["sample"]))
     output:
         config['sample'] + "/{pre_tag}_{post_tag}.trim.bam"
     run:
