@@ -17,6 +17,7 @@ chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.siz
 snakemake="--unlock"
 # this is for ease of development
 exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq"
+exeDir0="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/ATACseq"
 
 # parse the arguments
@@ -48,5 +49,6 @@ source activate ATACseq
 # unlock directories
 for i in `cat $sampleText`
 do
+    snakemake --snakefile $exeDir0/Snakefile --rerun-incomplete --cores 1 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$i'"
     snakemake --snakefile $exeDir/Snakefile --rerun-incomplete --cores 1 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "chromSize='$chromSize'" "sample='$i'"
 done

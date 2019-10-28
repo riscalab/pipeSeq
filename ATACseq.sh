@@ -40,6 +40,9 @@ then
     exit
 fi
 
+# change working directory
+cd $cwd
+
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}' `
 fastq2bam=$(sbatch --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
@@ -54,7 +57,7 @@ else
 fi
 
 # summary stats for fastq2bam after successful completion
-fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS")
+fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir")
 
 # get job id
 if ! echo ${fastq2bamSummary} | grep -q "[1-9][0-9]*$"; then
