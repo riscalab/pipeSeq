@@ -38,6 +38,9 @@ then
     exit
 fi
 
+# change working directory
+cd $cwd
+
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}' `
 fastq2bam=$(sbatch --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
