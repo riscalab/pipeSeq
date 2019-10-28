@@ -116,7 +116,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
                 g.write(ftp + '\t')
                 raw_read=0
                 for lane in determine_lanes(fastqDir, ftp):
-                    raw_read+=int(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/*" + lane + "*.adapter_trim.log").read().strip())
+                    raw_read+=int(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/*" + lane + "*adapter_trim.log").read().strip())
                 g.write(raw_read + '\t')
                 palign=0
                 for lane in determine_lanes(fastqDir, ftp):
