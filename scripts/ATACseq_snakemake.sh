@@ -24,7 +24,6 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq"
 ###########
 
 # conda env
-source activate ATACseq
 echo `which python`
 
 # determine sample
