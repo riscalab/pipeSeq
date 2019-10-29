@@ -145,7 +145,9 @@ rule filterBam:
     run:
         shell("samtools index {input}")
         shell("echo 'Removing reads from unwanted chromosomes and scaffolds'")
-        shell("chrs='';for i in {1..100}; do chrs+=' chr$i'; done; chrs+=' chrX'; samtools view -b {input} `echo $chrs` > {output}")
+        shell("echo {input} {output}")
+        shell("echo `chrs='';for i in {1..100}; do chrs+=' chr$i'`")
+        shell('chrs="";for i in {1..100}; do chrs+=" chr$i"; done; chrs+=" chrX"; samtools view -b {input} `echo $chrs` > {output}')
         shell("samtools view -b {input} chrM > {params.chrM}")
         shell("echo 'Filtering file {input} by rules filterBam and filter_removeDups_and_enrichTSS' >> {config[sample]}_{params.filterLog}")
         shell("mv {config[sample]}_{params.filterLog} {config[sample]}/{params.filterLog}")
