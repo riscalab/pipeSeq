@@ -23,10 +23,8 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
 ###########
 
 echo This is job $SLURM_JOB_ID
-echo Test permission
 
 # conda env
-source activate fastq2bam 
 echo `which python`
 
 # determine sample

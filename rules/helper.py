@@ -121,7 +121,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
                 palign=0
                 for lane in determine_lanes(fastqDir, ftp):
                     palign+=float(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*" + lane + "*.alignlog").read().strip()[0:-1])/len(determine_lanes(fastqDir, ftp))
-                g.write(str(palign) + '%\t')
+                g.write(str(np.round(palign, 2)) + '%\t')
                 g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
                 os.system("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
@@ -134,7 +134,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
                 mycoplasma=0
                 for lane in determine_lanes(fastqDir, ftp):
                     mycoplasma+=float(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
-                g.write(str(mycoplasma) + '%\n')
+                g.write(str(np.round(mycoplasma, 2)) + '%\n')
                 # finish clean up by moving index file
                 os.system("mv " + ftp + "/*.st.bam.bai " + ftp + "/00_source/")
                 os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
