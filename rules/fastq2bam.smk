@@ -106,7 +106,7 @@ rule mergeBamIfNecessary:
         config['sample'] + "/{pre_tag}_{post_tag}.trim.bam"
     run:
         if (len(input) == 1):
-            print('sample {config[sample]} was sequenced in one lane')
+            shell("echo 'sample {config[sample]} was sequenced in one lane'")
             shell("mv {input} {output}")
         else:
             print('sample {config[sample]} was sequenced in more than one lane; merging BAMs!')
@@ -140,13 +140,15 @@ rule filterBam:
     output:
         config['sample'] + "/{pre_tag}_{post_tag}.trim.st.all.bam"
     params:
-        chrs = "samtools view -H " + config['sample'] + "/{pre_tag}_{post_tag}.trim.st.bam | grep chr | cut -f2 | sed 's/SN://g' | grep -v chrM | grep -v _gl | grep -v Y | grep -v hap | grep -v random | grep -v v1 | grep -v v2",
         chrM = config['sample'] + "/{pre_tag}_{post_tag}.trim.st.chrM.bam",
         filterLog = "filtering.log"
     run:
         shell("samtools index {input}")
         shell("echo 'Removing reads from unwanted chromosomes and scaffolds'")
-        shell("samtools view -b {input} `echo {params.chrs}` > {output}")
+        shell("""
+              chrs="";for i in {1..100}; do chrs+=" chr$i"; done; chrs+=" chrX"
+              samtools view -b {input} `echo $chrs` > {output}
+              """)
         shell("samtools view -b {input} chrM > {params.chrM}")
         shell("echo 'Filtering file {input} by rules filterBam and filter_removeDups_and_enrichTSS' >> {config[sample]}_{params.filterLog}")
         shell("mv {config[sample]}_{params.filterLog} {config[sample]}/{params.filterLog}")
