@@ -146,7 +146,7 @@ rule filterBam:
         shell("samtools index {input}")
         shell("echo 'Removing reads from unwanted chromosomes and scaffolds'")
         shell("""
-              chrs="";for i in {1..100}; do chrs+=" chr$i"; done; chrs+=" chrX";
+              chrs='';for i in {1..100}; do chrs+=' chr$i'; done; chrs+=' chrX';
               samtools view -b {input} `echo $chrs` > {output}
               """)
         shell("samtools view -b {input} chrM > {params.chrM}")
