@@ -173,7 +173,7 @@ rule filter_removeDups_and_enrichTSS:
             shell("echo 'Removing blacklisted reads'")
             shell("bedtools intersect -v -abam {input} -b {config[blacklist]} -wa > {config[sample]}_temp.bam") # produces temp file
             ftp = "{config[sample]}/{wildcards.pre_tag}_{wildcards.post_tag}.trim.st.all.blft.bam"
-            shell("samtools sort {config[sample]}_temp.bam | samtools view -bh -f 0x2 - -o " + ftp)
+            shell("samtools view -bh -f 0x2 {config[sample]}_temp.bam -o " + ftp)
             shell("rm {config[sample]}_temp.bam") # remove temp file
             shell("echo 'Blacklist filtered using file {config[blacklist]}.' >> {params.filterLog}")
         else:
@@ -184,7 +184,7 @@ rule filter_removeDups_and_enrichTSS:
         if int(config["mapq"]) > 0:
             shell("echo 'Removing low quality reads'")
             tmp = str(ftp).split('.bam')[0] + '.qft.bam'
-            shell("samtools sort " + str(ftp) + " | samtools view -bh -f 0x2 -q {config[mapq]} - -o " + tmp)
+            shell("samtools view -bh -f 0x2 -q {config[mapq]} " + str(ftp) + " -o " + tmp)
             ftp = tmp
             shell("echo 'Filtered with mapping quality filter {config[mapq]}.' >> {params.filterLog}")
         else:
