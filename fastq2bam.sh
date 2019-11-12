@@ -46,7 +46,7 @@ source activate fastq2bam
 
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-fastq2bam=$(sbatch --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
+fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
 
 # get job id
 if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
@@ -58,4 +58,4 @@ else
 fi
 
 # summary stats for fastq2bam after successful completion
-sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir"
+sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir"
