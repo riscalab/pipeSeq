@@ -48,7 +48,7 @@ source activate ATACseq
 
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-fastq2bam=$(sbatch --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
+fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
 
 # get job id
 if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
@@ -60,7 +60,7 @@ else
 fi
 
 # summary stats for fastq2bam after successful completion
-fastq2bamSummary=$(sbatch --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir")
+fastq2bamSummary=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir")
 
 # get job id
 if ! echo ${fastq2bamSummary} | grep -q "[1-9][0-9]*$"; then
@@ -72,7 +72,7 @@ else
 fi
 
 # run ATACseq
-ATACseq=$(sbatch --depend=afterok:$fastq2bamSummaryID --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $snakemake)
+ATACseq=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamSummaryID --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $snakemake)
 
 # get job id
 if ! echo ${ATACseq} | grep -q "[1-9][0-9]*$"; then
@@ -84,4 +84,4 @@ else
 fi
 
 # summary stats for ATACseq after successful completion
-sbatch --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize"
+sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize"
