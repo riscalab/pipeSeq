@@ -129,3 +129,7 @@ rule bedGraph2bigWig:
         shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
         shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
         shell("rm {params.qft} {params.st}")
+        # cleanup directory
+        shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi")
+        shell("mv {config[sample]}/*atac.bam {config[sample]}/00_source/")
+        shell("mv {config[sample]}/*bai {config[sample]}/00_source/")
