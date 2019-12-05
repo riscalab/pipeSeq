@@ -15,7 +15,14 @@ import subprocess
 exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" 
 
-# defaults for parameters set in fastq2bam.py exectuable file
+# BOWTIE2 ALIGN COMMAND
+align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+
+# MACS2 PEAK CALL COMMAND
+callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
+
+# BAMTOBEDGRAPH COMMAND
+bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
 
 # determine sample names and sample numbers from the working directory
 def findFiles(fastqDir, samp): 
@@ -77,9 +84,8 @@ def determine_lanes(fastqDir, samp):
 ################################
 # combine insert plots and summary (7)
 ################################
-def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
+def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invocationCommand):
     output="fastq2bamRunSummary.log"
-    align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
     files = []
     with open(sampleTxt, 'r') as ftp:
         for line in ftp:
@@ -98,7 +104,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
-        f.write("pipeline version (fastq2bam git commit): " + pcommit)
+        f.write("pipeline version (fastq2bam git commit): " + pcommit + '\n')
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
@@ -108,9 +114,11 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n\n')
         f.write("PARAMETERS\n")
         f.write("##########\n")
+        f.write("invocation command: " + invocationCommand + '\n')
         f.write("genome reference for aligning: " + genomeRef + '\n')
         f.write("blacklist for filtering: " + blacklist + '\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
+        f.write("TSS bed file for insertion calculation: " + TSS + '\n')
         f.write("align command: " + align + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
@@ -152,10 +160,8 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
 ################################
 # success and summary (7)
 ################################
-def ATACseqSummary(sampleTxt, chromSize):
+def ATACseqSummary(sampleTxt, chromSize, invocationCommand):
     output="ATACseqRunSummary.log"
-    callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
-    bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}" # need to update this whenever the command in the fastq2bam.smk file changes, dont like this but better than makign the command blind (placing it here) and then importing it
     files = []
     with open(sampleTxt, 'r') as ftp:
         for line in ftp:
@@ -182,6 +188,7 @@ def ATACseqSummary(sampleTxt, chromSize):
         f.write("ucsc tools version: 2 (conda 332)\n\n") # must update if new version ever downloaded (shouldnt bc software dependencies)
         f.write("PARAMETERS" + '\n')
         f.write("##########\n")
+        f.write("invocation command: " + invocationCommand + '\n')
         f.write("chromosome sizes: " + chromSize + '\n')
         f.write("peak call command: " + callpeak + '\n')
         f.write("bam to bedgraph command: " + bam2bg + '\n\n')
@@ -222,9 +229,11 @@ if __name__ == '__main__':
             mapq=sys.argv[6]
             TSS=sys.argv[7]
             fastqDir=sys.argv[8]
-            fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir)
+            invocationCommand=sys.argv[9]
+            fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invocationCommand)
         else:
             chromSize=sys.argv[4]
-            ATACseqSummary(sampleTxt, chromSize)
+            invocationCommand=sys.argv[5]
+            ATACseqSummary(sampleTxt, chromSize, invocationCommand)
     else:
         print('data was not processed further')

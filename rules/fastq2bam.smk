@@ -24,7 +24,7 @@ wildcard_constraints:
 # commands with custom flags
 ################################      
 
-align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align = helper.align # go to helper file to see / edit align command
 
 ################################
 # trim adapters (1)

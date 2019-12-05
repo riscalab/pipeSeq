@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -N 1
-#SBATCH -n 3
+#SBACTH -n 3
 
 ######################
 # READ IN PARAMETERS #
@@ -32,5 +32,5 @@ SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sampleText)
 echo $SAMPLE
 
 # run code
-snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores 3 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$SAMPLE'" 
+snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores $SLURM_NTASKS $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$SAMPLE'" 
 
