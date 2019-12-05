@@ -6,6 +6,7 @@
 import os
 import sys
 import datetime
+import helper
 
 ################################
 # parameters and functions
@@ -22,12 +23,12 @@ wildcard_constraints:
 # commands with custom flags
 ################################      
 
-callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
+callpeak = helper.callpeak # go to helper file to see / edit callpeak command
 bdgcmpfc = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m FE" # fold enrichment 
 preS = """calc(){{ awk "BEGIN {{ print "$*" }}"; }}; num=`wc -l {input.bed} | awk '{{print $1}}'`; den=1000000;"""
 S = """S=`calc $num/$den | awk '{{printf("%i", $1)}}'`;""" 
 bdgcmppval = "macs2 bdgcmp -t {input.treat} -c {input.control} -o {output} -m ppois -S $S" # p value
-bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
+bam2bg = helper.bam2bg # go to helper file to see / edit bam2bg command
 
 ################################
 # align at insertion center (1)
