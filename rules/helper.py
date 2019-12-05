@@ -180,8 +180,8 @@ def ATACseqSummary(sampleTxt, chromSize, invocationCommand):
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
-        f.write("pipeline version (fastq2bam git commit): " + pcommit_fast)
-        f.write("pipeline version (ATACseq git commit): " + pcommit_atac)
+        f.write("pipeline version (fastq2bam git commit): " + pcommit_fast + '\n')
+        f.write("pipeline version (ATACseq git commit): " + pcommit_atac + '\n')
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n')
         f.write("macs2 version: 2.1.2 <in macs2_python2.yml conda env>\n") # must update if macs2_python2 conda env is updated
