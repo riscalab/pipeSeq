@@ -222,7 +222,7 @@ if __name__ == '__main__':
         if ('Nothing to be done.' in ' '.join(dat)):
             sums+=1
         f.close()
-    if (True):#sums < numSamples):
+    if (sums < numSamples):
         if (not run):
             genomeRef=sys.argv[4]
             blacklist=sys.argv[5]
