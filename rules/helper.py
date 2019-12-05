@@ -5,6 +5,7 @@ import os
 import numpy as np
 import datetime
 import sys
+import subprocess
 
 ################################
 # parameters and functions
@@ -89,11 +90,15 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir):
     print('\n###########################')
     print('fastq2bam pipeline complete')
     print('\n###########################')
+    # get git commit of current pipeline
+    pcommit = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam")
+    pcommit.wait()
     with open(output, "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
+        f.write("pipeline version (fastq2bam git commit): " + pcommit)
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
@@ -159,11 +164,18 @@ def ATACseqSummary(sampleTxt, chromSize):
     print('\n###########################')
     print('ATAC-seq pipeline complete')
     print('\n###########################')
+    # get git commit of current pipeline
+    pcommit_fast = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam")
+    pcommit_fast.wait()
+    pcommit_atac = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq")
+    pcommit_atac.wait()
     with open(output, "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
         f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
+        f.write("pipeline version (fastq2bam git commit): " + pcommit_fast)
+        f.write("pipeline version (ATACseq git commit): " + pcommit_atac)
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n')
         f.write("macs2 version: 2.1.2 <in macs2_python2.yml conda env>\n") # must update if macs2_python2 conda env is updated
