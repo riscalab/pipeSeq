@@ -97,14 +97,15 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
     print('fastq2bam pipeline complete')
     print('\n###########################')
     # get git commit of current pipeline
-    pcommit = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam")
+    pcommit = subprocess.Popen(["git", "rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam", stdout=subprocess.PIPE)
     pcommit.wait()
     with open(output, "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
-        f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
+        f.write('date: ' + datetime.datetime.now().isoformat() + '\n')
+        f.write("invocation command: " + invocationCommand + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
-        f.write("pipeline version (fastq2bam git commit): " + pcommit + '\n')
+        f.write("pipeline version (fastq2bam git commit): " + pcommit.stdout.read().decode().strip() + '\n')
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
@@ -114,7 +115,6 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n\n')
         f.write("PARAMETERS\n")
         f.write("##########\n")
-        f.write("invocation command: " + invocationCommand + '\n')
         f.write("genome reference for aligning: " + genomeRef + '\n')
         f.write("blacklist for filtering: " + blacklist + '\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
@@ -171,24 +171,24 @@ def ATACseqSummary(sampleTxt, chromSize, invocationCommand):
     print('ATAC-seq pipeline complete')
     print('\n###########################')
     # get git commit of current pipeline
-    pcommit_fast = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam")
+    pcommit_fast = subprocess.Popen(["git", "rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam", stdout=subprocess.PIPE)
     pcommit_fast.wait()
-    pcommit_atac = subprocess.Popen(["git rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq")
+    pcommit_atac = subprocess.Popen(["git", "rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq", stdout=subprocess.PIPE)
     pcommit_atac.wait()
     with open(output, "w") as f:
         f.write('user: ' + os.environ.get('USER') + '\n')
-        f.write('date: ' + datetime.datetime.now().isoformat() + '\n\n')
+        f.write('date: ' + datetime.datetime.now().isoformat() + '\n')
+        f.write("invocation command: " + invocationCommand + '\n\n')
         f.write("SOFTWARE\n")
         f.write("########\n")
-        f.write("pipeline version (fastq2bam git commit): " + pcommit_fast + '\n')
-        f.write("pipeline version (ATACseq git commit): " + pcommit_atac + '\n')
+        f.write("pipeline version (fastq2bam git commit): " + pcommit_fast.stdout.read().decode().strip() + '\n')
+        f.write("pipeline version (ATACseq git commit): " + pcommit_atac.stdout.read().decode().strip() + '\n')
         f.write("python version: " + str(sys.version_info[0]) + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n')
         f.write("macs2 version: 2.1.2 <in macs2_python2.yml conda env>\n") # must update if macs2_python2 conda env is updated
         f.write("ucsc tools version: 2 (conda 332)\n\n") # must update if new version ever downloaded (shouldnt bc software dependencies)
         f.write("PARAMETERS" + '\n')
         f.write("##########\n")
-        f.write("invocation command: " + invocationCommand + '\n')
         f.write("chromosome sizes: " + chromSize + '\n')
         f.write("peak call command: " + callpeak + '\n')
         f.write("bam to bedgraph command: " + bam2bg + '\n\n')
@@ -222,7 +222,7 @@ if __name__ == '__main__':
         if ('Nothing to be done.' in ' '.join(dat)):
             sums+=1
         f.close()
-    if (sums < numSamples):
+    if (True):#sums < numSamples):
         if (not run):
             genomeRef=sys.argv[4]
             blacklist=sys.argv[5]
