@@ -210,9 +210,8 @@ rule filter_removeDups_and_enrichTSS:
             shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
         # cleanup directory
         shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi")
-        shell("mv {config[sample]}/*trim.fastq.gz {config[sample]}/00_source/")
+        shell("mv {config[sample]}/*.trim.fastq.gz {config[sample]}/00_source/")
         shell("mv {config[sample]}/*.trim.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.st.bam {config[sample]}/00_source/")
         shell("mv {config[sample]}/*.all.bam {config[sample]}/00_source/")
         shell("mv {config[sample]}/*.chrM.bam {config[sample]}/00_source/")
         shell("mv {config[sample]}/*.blft.bam {config[sample]}/00_source/")
