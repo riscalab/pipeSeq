@@ -131,5 +131,4 @@ rule bedGraph2bigWig:
         shell("rm {params.qft} {params.st}")
         # cleanup directory
         shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi")
-        shell("mv {config[sample]}/*atac.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*bai {config[sample]}/00_source/")
+        # this rule is duplicated for each sample, so actual clean up is in summary stats

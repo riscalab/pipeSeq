@@ -61,7 +61,7 @@ fi
 
 # summary stats for fastq2bam after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-fastq2bamSummary=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir $myInvocation")
+fastq2bamSummary=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir '$myInvocation'")
 
 # get job id
 if ! echo ${fastq2bamSummary} | grep -q "[1-9][0-9]*$"; then
@@ -85,4 +85,4 @@ else
 fi
 
 # summary stats for ATACseq after successful completion
-sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize $myInvocation"
+sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize '$myInvocation'"
