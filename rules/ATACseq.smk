@@ -130,5 +130,5 @@ rule bedGraph2bigWig:
         shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
         shell("rm {params.qft} {params.st}")
         # cleanup directory
-        shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi")
+        shell("if [ ! -d {config[sample]}/intermediates ]; then mkdir {config[sample]}/intermediates; fi")
         # this rule is duplicated for each sample, so actual clean up is in summary stats
