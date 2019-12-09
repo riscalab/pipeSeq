@@ -107,7 +107,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
         f.write("########\n")
         f.write("pipeline version (fastq2bam git commit): " + pcommit.stdout.read().decode().strip() + '\n')
         f.write("python version: " + str(sys.version_info[0]) + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1)" + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
