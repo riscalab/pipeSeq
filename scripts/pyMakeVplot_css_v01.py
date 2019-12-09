@@ -154,9 +154,9 @@ if not options.o:
     else: options.o=n1+'.'+n2+'.vplot'
 if options.u == True:
     #np.savetxt(options.o,mat,delimiter='\t',fmt='%s') # NPEDIT change to smoothed curve
-    np.savetxt(options.o,np.convolve(mat,np.ones(int(options.window)),'same')/int(options.window)/np.mean(mat[1:200]),delimiter='\t',fmt='%s')
+    np.savetxt(options.o+'.dat',np.convolve(mat,np.ones(int(options.window)),'same')/int(options.window)/np.mean(mat[1:200]),delimiter='\t',fmt='%s')
 else:
-    np.save(options.o,mat)
+    np.save(options.o+'.dat',mat)
 
 # plot
 fig=plt.figure(figsize=(8.0, 5.0))
