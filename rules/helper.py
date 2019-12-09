@@ -141,7 +141,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
                 g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
                 g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
                 if os.path.exists(TSS):
-                    g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
+                    g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS.log | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
                 else:
                     g.write("NA" +'\t')
                 mycoplasma=0
