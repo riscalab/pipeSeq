@@ -145,13 +145,13 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
                 else:
                     g.write("NA" +'\t')
                 mycoplasma=0
-                for lane in determine_lanes(fastqDir, ftp):
-                    mycoplasma+=float(os.popen("""awk 'index($1, "Mycoplasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+                for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
+                    mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
                 g.write(str(np.round(mycoplasma, 2)) + '%\n')
-                # finish clean up into 00_source directory
-                os.system("mv " + ftp + "/*.bai " + ftp + "/00_source/")
-                os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/00_source/")
-                os.system("mv " + ftp + "/*.st.bam " + ftp + "/00_source/") # need to move trim.st.bam here rather than last rule
+                # finish clean up into intermediates directory
+                os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
+                os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/intermediates/")
+                os.system("mv " + ftp + "/*.st.bam " + ftp + "/intermediates/") # need to move trim.st.bam here rather than last rule
     # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -202,9 +202,9 @@ def ATACseqSummary(sampleTxt, chromSize, invocationCommand):
                 g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "den=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; num=`bedtools sort -i " +
                 ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam "
                     + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip() + '\n')
-                # finish clean up into 00_source directory
-                os.system("mv " + ftp + "/*.bai " + ftp + "/00_source/")
-                os.system("mv " + ftp + "/*.atac.bam " + ftp + "/00_source/")
+                # finish clean up into intermediates directory
+                os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
+                os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
     # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)

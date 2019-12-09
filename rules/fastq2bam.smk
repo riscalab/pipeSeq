@@ -67,7 +67,7 @@ rule fastqc:
     params:
         r1 = config['sample'] + "/{pre_tag}_R1_{post_tag}.trim.fastq.gz",
         r2 = config['sample'] + "/{pre_tag}_R2_{post_tag}.trim.fastq.gz"
-    threads: 2
+    threads: 4
     run:
         shell("fastqc -t {threads} -o {config[sample]} {input.r1} {input.r2}")
         shell("unpigz {params.r1} {params.r2}")
@@ -86,7 +86,7 @@ rule alignInserts_and_fastqScreen:
         alignLog = config['sample'] + "/{pre_tag}_{post_tag}.trim.alignlog",
     params:
         screen = "screen.log"
-    threads: 6
+    threads: 18
     run:
         shell(align) # align command defined above
         shell("fastq_screen --aligner bowtie2 {input.unzip1} {input.unzip2}  > {config[sample]}_{params.screen}")
@@ -209,11 +209,11 @@ rule filter_removeDups_and_enrichTSS:
         else:
             shell("echo 'TSS BED file not provided. not creating TSS enrichment profile'")
         # cleanup directory
-        shell("if [ ! -d {config[sample]}/00_source ]; then mkdir {config[sample]}/00_source; fi")
-        shell("mv {config[sample]}/*.trim.fastq.gz {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.trim.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.all.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.chrM.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.blft.bam {config[sample]}/00_source/")
-        shell("mv {config[sample]}/*.qft.bam {config[sample]}/00_source/")
+        shell("if [ ! -d {config[sample]}/intermediates ]; then mkdir {config[sample]}/intermediates; fi")
+        shell("mv {config[sample]}/*.trim.fastq.gz {config[sample]}/intermediates/")
+        shell("mv {config[sample]}/*.trim.bam {config[sample]}/intermediates/")
+        shell("mv {config[sample]}/*.all.bam {config[sample]}/intermediates/")
+        shell("mv {config[sample]}/*.chrM.bam {config[sample]}/intermediates/")
+        shell("mv {config[sample]}/*.blft.bam {config[sample]}/intermediates/")
+        shell("mv {config[sample]}/*.qft.bam {config[sample]}/intermediates/")
 
