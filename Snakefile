@@ -3,6 +3,9 @@
 
 import rules.helper as helper
 
+wildcard_constraints:
+    post_tag = "\d+"
+
 ################################
 # pipeline output check
 ################################
