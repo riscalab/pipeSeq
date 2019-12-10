@@ -22,6 +22,6 @@ rule makeBedGraphSignalPval:
     output:
         config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_pval.bdg"
     conda:
-        "../envs/macs2_python2.yml" # path relative to current file, not working directory
+        "../../envs/macs2_python2.yml" # path relative to current file, not working directory
     shell:
         preS + ' ' + S + ' ' + bdgcmppval # macs2 bgdcmp command defined above for p value
