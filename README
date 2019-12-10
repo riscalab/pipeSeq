@@ -1,0 +1,70 @@
+#########################################################################################
+ATACseq: analyze ATACseq bam files to call peaks and make tracks
+#########################################################################################
+npagane | 190702 | risca lab
+
+#####
+setup
+#####
+
+ATACseq MUST be adjacent to fastq2bam to allow for the relative path symlinks to work!
+**FASTQ2BAM MUST BE DOWNLOADED FOR ATACSEQ TO WORK**
+
+######
+to run
+######
+
+bash ATACseq.sh -c <1> -f <2> -s <3> -<opts>
+where:
+    <1> = desired working directory for processing (string, i.e. path/to/dir)
+    <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
+    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
+    -<opts> additional options:
+        -g = genome reference for alignment (string, i.e. path/to/genome)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
+        -b = blacklist for filtering (string, i.e. path/to/blacklist)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
+            default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
+        -m = the map quality threshold for alignment (int, i.e. 30)
+            default: "30"
+        -p = any snakemake flags for compilation (string, i.e. unlock)
+            default: ""
+        -z = sizes of chromosomes (string, i.e. path/to/genome/file)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
+
+* example *
+bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
+######
+unlock
+######
+
+if you need to cancel a remote run (i.e. scancel), then you need to unlock the directories that snakemake locked by
+exiting too early. run the unlock.sh script as:
+* example *
+bash scripts/unlock.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
+###########
+environment
+###########
+
+must be in ATACseq conda environment
+    source activate ATACseq
+    echo `which python` # confirms you are in correct env
+
+macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
+was created and exported via:
+    conda activate macs2_python2
+    conda env export >  macs2_python2.yml (in the conda directory i.e. /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/)
+the yml file is then symlinked to the envs/ directory
+
+##############
+file structure
+##############
+
+ATACseq.sh <executable>
+Snakefile <constructs pipeline from rules>
+rules/* <rules for executable pipeline with helper code>
+scripts/* <R, python, or bash scripts to call in pipeline>
+envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
