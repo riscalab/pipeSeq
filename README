@@ -1,1 +1,56 @@
-trying to merge seq repos
+#########################################################################################
+fastq2bam: align fastq data into bam format and produce quality metrics of the sequencing
+#########################################################################################
+npagane | 190628 | risca lab
+
+######
+to run
+######
+
+bash fastq2bam.sh -c <1> -f <2> -s <3> -<opts>
+
+where:
+    <1> = desired working directory for processing (string, i.e. path/to/dir)
+    <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
+    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
+    -<opts> additional options:
+        -g = genome reference for alignment (string, i.e. path/to/genome)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
+        -b = blacklist for filtering (string, i.e. path/to/blacklist)
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
+            default: "None"
+        -m = the map quality threshold for alignment (int, i.e. 30)
+            default: "30"
+        -p = any snakemake flags for compilation (string, i.e. --forcerun RULE)
+            default: ""
+
+* example *
+bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
+######
+unlock
+######
+
+if you need to cancel a remote run (i.e. scancel), then you need to unlock the directories that snakemake locked by
+exiting too early. run the unlock.sh script as:
+* example *
+bash scripts/unlock.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+
+###########
+environment
+###########
+
+must be in fastq2bam conda environment
+    source activate fastq2bam
+    echo `which python` # confirms you are in correct env
+
+##############
+file structure
+##############
+
+fastq2bam.sh <executable>
+Snakefile <constructs pipeline through including rules>
+rules/* <rules for pipeline along with any helper files>
+scripts/* <R, python, or bash scripts to call in pipeline>
+envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
