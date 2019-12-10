@@ -4,8 +4,8 @@ npagane | risca lab
 ####################
 available pipelines:
 ####################
-fastq2bam
-ATACseq
+fastq2bam (general processing)
+ATACseq (runs fastq2bam + additional processing) 
 
 #########################################################################################
 fastq2bam: align fastq data into bam format and produce quality metrics of the sequencing
