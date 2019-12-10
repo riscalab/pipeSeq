@@ -2,7 +2,7 @@
 ## npagane | risca lab | fastq2bam pipeline rules
 
 import sys
-sys.path.append('../')
+sys.path.append('..')
 import helper
 
 ################################
