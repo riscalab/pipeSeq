@@ -42,6 +42,12 @@ def customFileExpand(ext, fastqDir, samp, dir = ''):
     for i in range(1, len(WHOLEFILES)):
         parts = set(parts & set(WHOLEFILES[i]))
     parts=list(parts)
+    # remove lane information if it remains
+    newparts = []
+    for part in parts:
+        if 'L00' not in part:
+            newparts.append(part)
+    parts=newparts
     uniq, inds = np.unique(WHOLEFILES[0], return_index = True)
     if dir == '':
         ftp = samp + '/'

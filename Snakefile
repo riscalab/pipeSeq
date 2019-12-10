@@ -37,7 +37,7 @@ if config['pipe'] == 'ATACseq':
                     ".trim.st.all.rmdup.atac_pval.bw"
                 ), config['fastqDir'], config['sample'], 'peakCalls'
             )
-else: # default to fastqbam
+else: # default to fastq2bam
     rule all:
         input:
             helper.customFileExpand(
