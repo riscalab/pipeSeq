@@ -130,6 +130,7 @@ def sampleSummaryStats(temp, files, fastqDir, TSS):
                     + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip())
                 # finish clean up into intermediates directory
                 os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
+                os.system("rm -r " + ftp + "/.conda") # remove the conda software directory (it's big)
             g.write('\n')
             # finish clean up into intermediates directory
             os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
