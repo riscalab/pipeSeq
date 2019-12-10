@@ -2,8 +2,8 @@
 ## npagane | risca lab | fastq2bam pipeline rules
 
 import sys
-sys.path.append('../')
-import helper
+sys.path.append('{workflow.basedir}')
+import rules.helper
 
 ################################
 # merge sample bams aross lanes (3.5)

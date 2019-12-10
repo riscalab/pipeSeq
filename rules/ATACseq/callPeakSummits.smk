@@ -2,8 +2,8 @@
 ## npagane | risca lab | ATACseq pipeline rules
 
 import sys
-sys.path.append('../')
-import helper
+sys.path.append('{workflow.basedir}')
+import rules.helper
 
 ################################
 # commands with custom flags
