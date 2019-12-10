@@ -124,7 +124,7 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
         f.write("#######\n")
         # summary stats over the samples
         with open(temp, "w") as g:
-            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tMAX_MYCOPLASMA_MAP\n")
+            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tAVG_MYCOPLASMA_MAP\nADAPTER_MAP")
             for ftp in files:
                 g.write(ftp + '\t')
                 raw_read=0
@@ -148,6 +148,10 @@ def fastq2bamSummary(sampleTxt, genomeRef, blacklist, mapq, TSS, fastqDir, invoc
                 for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
                     mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
                 g.write(str(np.round(mycoplasma, 2)) + '%\n')
+                adapter=0
+                for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
+                    adapter+=float(os.popen("""awk 'index($1, "Adapters")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+                g.write(str(np.round(adapter, 2)) + '%\n')
                 # finish clean up into intermediates directory
                 os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
                 os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/intermediates/")
