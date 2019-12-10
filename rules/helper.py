@@ -117,18 +117,20 @@ def sampleSummaryStats(temp, files, fastqDir, TSS):
             for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
                 mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
                     + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
-            g.write(str(np.round(mycoplasma, 2)) + '%\n')
+            g.write(str(np.round(mycoplasma, 2)) + '%\t')
             adapter=0
             for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
                 adapter+=float(os.popen("""awk 'index($1, "Adapters")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ 
                     + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
-            g.write(str(np.round(adapter, 2)) + '%\n')
+            g.write(str(np.round(adapter, 2)) + '%')
             if temp == "tempSummary_atac.log":
+                g.write('\t')
                 g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "den=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; num=`bedtools sort -i " 
                     + ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam "
-                    + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip() + '\n')
+                    + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip())
                 # finish clean up into intermediates directory
                 os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
+            g.write('\n')
             # finish clean up into intermediates directory
             os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
             os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/intermediates/")
