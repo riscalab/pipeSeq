@@ -13,8 +13,8 @@ mapq=30
 chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/ATACseq" 
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/ATACseq"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq" 
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
 
 # parse the arguments
 while getopts c:f:s:g:b:t:m:z:p: option
@@ -46,34 +46,9 @@ cd $cwd
 # set conda env
 source activate ATACseq
 
-# run fastq2bam
-numSamples=`wc -l $sampleText | awk '{print $1}' `
-fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
-
-# get job id
-if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
-   echo "Job(s) submission failed."
-   echo ${fastq2bam}
-   exit 1
-else
-   fastq2bamID=$(echo ${fastq2bam} | grep -oh "[1-9][0-9]*$")
-fi
-
-# summary stats for fastq2bam after successful completion
-myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-fastq2bamSummary=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText $genomeRef $blacklist $mapq $TSS $fastqDir '$myInvocation'")
-
-# get job id
-if ! echo ${fastq2bamSummary} | grep -q "[1-9][0-9]*$"; then
-   echo "Job(s) submission failed."
-   echo ${fastq2bamSummary}
-   exit 1
-else
-   fastq2bamSummaryID=$(echo ${fastq2bamSummary} | grep -oh "[1-9][0-9]*$")
-fi
-
 # run ATACseq
-ATACseq=$(sbatch -p risc,hpc --depend=afterok:$fastq2bamSummaryID --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $snakemake)
+numSamples=`wc -l $sampleText | awk '{print $1}' `
+ATACseq=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $snakemake)
 
 # get job id
 if ! echo ${ATACseq} | grep -q "[1-9][0-9]*$"; then
@@ -84,5 +59,6 @@ else
    ATACseqID=$(echo ${ATACseq} | grep -oh "[1-9][0-9]*$")
 fi
 
-# summary stats for ATACseq after successful completion
-sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText $chromSize '$myInvocation'"
+# summary stats for fastq2bam after successful completion
+myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
+sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $TSS $chromSize"

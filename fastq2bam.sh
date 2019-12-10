@@ -1,8 +1,5 @@
 #!/bin/bash
-# npagane | risca lab | oct 2019 | wrapper to unlock all the relevant snakemake directories
-
-# run this script just like you would run the fastq2bam.sh exectubale
-# i.e. bash unlock.sh -c . -f /path/to/fastqs -s samples.txt
+# npagane | risca lab | oct 2019 | fastq2bam pipeline wrapper to execute
 
 ##################
 # SET PARAMETERS #
@@ -13,10 +10,10 @@ genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/
 blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
 TSS="None"
 mapq=30
-snakemake="--unlock"
+snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam" 
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
 while getopts c:f:s:g:b:t:m:p: option
@@ -41,10 +38,25 @@ then
     exit
 fi
 
+# change working directory
+cd $cwd
+
+# set conda env
 source activate fastq2bam
 
-# unlock directories
-for i in `cat $sampleText`
-do
-    snakemake --snakefile $exeDir/Snakefile --rerun-incomplete --cores 1 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$i'"
-done
+# run fastq2bam
+numSamples=`wc -l $sampleText | awk '{print $1}' `
+fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
+
+# get job id
+if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
+   echo "Job(s) submission failed."
+   echo ${fastq2bam}
+   exit 1
+else
+   fastq2bamID=$(echo ${fastq2bam} | grep -oh "[1-9][0-9]*$")
+fi
+
+# summary stats for fastq2bam after successful completion
+myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
+sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $TSS"

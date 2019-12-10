@@ -6,6 +6,7 @@
 # READ IN PARAMETERS #
 ######################
 
+pipe="fastq2bam"
 cwd=$1
 fastqDir=$2
 sampleText=$3
@@ -15,8 +16,8 @@ TSS=$6
 mapq=$7
 snakemake=$8
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/fastq2bam"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/fastq2bam"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
 
 ###########
 # EXECUTE #
@@ -32,5 +33,5 @@ SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sampleText)
 echo $SAMPLE
 
 # run code
-snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores 3 $snakemake --config "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$SAMPLE'" 
+snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores 3 $snakemake --config "pipe='$pipe'" "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "sample='$SAMPLE'" 
 
