@@ -8,7 +8,6 @@
 # set the default arguments for optional parameters
 genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
 blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
-TSS="None"
 mapq=30
 snakemake=""
 # this is for ease of development
@@ -16,7 +15,7 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
-while getopts c:f:s:g:b:t:m:p: option
+while getopts c:f:s:g:b:m:p: option
 do
 case "${option}"
 in
@@ -25,7 +24,6 @@ f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. pat
 s) sampleText=${OPTARG};; # sample names text file (REQUIRED, string, i.e. path/to/samples.txt)
 g) genomeRef=${OPTARG};; # genome reference for alignment (OPTIONAL, string, i.e. path/to/genome.fa)
 b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, i.e. path/to/blacklist)
-t) TSS=${OPTARG};; # TSS for that genome (OPTIONAL, string, i.e. path/to/TSS) 
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
 esac
@@ -46,7 +44,7 @@ source activate fastq2bam
 
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $snakemake)
+fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq $snakemake)
 
 # get job id
 if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
@@ -59,4 +57,4 @@ fi
 
 # summary stats for fastq2bam after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $TSS"
+sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq"

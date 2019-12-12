@@ -16,7 +16,7 @@ rule mergeBamIfNecessary:
         config['sample'] + "/{pre_tag}_{post_tag}.trim.bam"
     run:
         if (len(input) == 1):
-            shell("echo 'sample " + config['sample'] + " was sequenced in one lane'")
+            print("sample " + config['sample'] + " was sequenced in one lane")
             shell("mv {input} {output}")
         else:
             print('sample ' + config['sample'] + ' was sequenced in more than one lane; merging BAMs!')

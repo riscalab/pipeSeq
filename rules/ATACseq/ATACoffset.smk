@@ -2,7 +2,7 @@
 ## npagane | risca lab | ATACseq pipeline rules
 
 ################################
-# align at insertion center (1)
+# align at insertion center (1a)
 ################################
 
 rule ATACoffset:

@@ -27,8 +27,6 @@ where:
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
         -b = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
-        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
-            default: "None"
         -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
         -p = any snakemake flags for compilation (string, i.e. --forcerun RULE)
@@ -41,9 +39,8 @@ bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs 
 environment
 ###########
 
-must be in fastq2bam conda environment
-    source activate fastq2bam
-    echo `which python` # confirms you are in correct env
+must be in fastq2bam or base conda environment
+    conda activate fastq2bam
 
 ##############
 file structure
@@ -73,12 +70,12 @@ where:
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
         -b = blacklist for filtering (string, i.e. path/to/blacklist)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
-        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
-            default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
         -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
         -p = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
+        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
+            default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
         -z = sizes of chromosomes (string, i.e. path/to/genome/file)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 
@@ -89,15 +86,15 @@ bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s
 environment
 ###########
 
-must be in ATACseq conda environment
-    source activate ATACseq
-    echo `which python` # confirms you are in correct env
+must be in ATACseq or base conda environment
+    conda activate ATACseq
 
 macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
 was created and exported via:
     conda activate macs2_python2
-    conda env export >  macs2_python2.yml (in the conda directory i.e. /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/)
-the yml file is then symlinked to the envs/ directory
+    conda env export > /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/macs2_python2.yml
+    ln -s /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/macs2_python2.yml envs/
+(the YML file is symlinked to the envs/ directory)
 
 ##############
 file structure

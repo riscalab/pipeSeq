@@ -13,6 +13,7 @@ wildcard_constraints:
 if config['pipe'] == 'ATACseq':
     rule all:
         input:
+            # all tracks and peaks
             helper.customFileExpand(
                 helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                     ".trim.st.all.blft.qft.rmdup.atac.bw",
@@ -36,10 +37,20 @@ if config['pipe'] == 'ATACseq':
                     ".trim.st.all.blft.rmdup.atac_pval.bw",
                     ".trim.st.all.rmdup.atac_pval.bw"
                 ), config['fastqDir'], config['sample'], 'peakCalls'
+            ),
+            # and TSS enrichment files
+            helper.customFileExpand(
+                helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
+                    ".trim.st.all.blft.qft.RefSeqTSS.log",
+                    ".trim.st.all.qft.RefSeqTSS.log",
+                    ".trim.st.all.blft.RefSeqTSS.log",
+                    ".trim.st.all.RefSeqTSS.log"
+                ), config['fastqDir'], config['sample'], 
             )
 else: # default to fastq2bam
     rule all:
         input:
+            # final processed (removed duplicates bam)
             helper.customFileExpand(
                 helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                     ".trim.st.all.blft.qft.rmdup.bam",
@@ -49,6 +60,7 @@ else: # default to fastq2bam
                 ), config['fastqDir'], config['sample']
             )
 
+
 ################################
 # rules for pipeline
 ################################
@@ -56,15 +68,18 @@ else: # default to fastq2bam
 # assume general fastq2bam rules (THIS WILL NEED TO CHANGE WHEN RICC SEQ ADDED)
 
 include: "rules/fastq2bam/trimAdapters.smk"
-include: "rules/fastq2bam/fastqc.smk"
-include: "rules/fastq2bam/alignInserts_and_fastqScreen.smk"
+include: "rules/fastq2bam/fastqcAndScreen.smk"
+include: "rules/fastq2bam/alignInserts.smk"
 include: "rules/fastq2bam/mergeBamIfNecessary.smk"
 include: "rules/fastq2bam/sortBam.smk"
 include: "rules/fastq2bam/filterBam.smk"
-include: "rules/fastq2bam/blacklistFilter_removeDups_and_enrichTSS.smk"
+include: "rules/fastq2bam/blacklistFilter.smk"
+include: "rules/fastq2bam/qualityFilter.smk"
+include: "rules/fastq2bam/removeDuplicates.smk"
 
 if config['pipe'] == 'ATACseq':
     include: "rules/ATACseq/ATACoffset.smk"
+    include: "rules/ATACseq/enrichTSS.smk"
     include: "rules/ATACseq/callPeakSummits.smk"
     include: "rules/ATACseq/bam2bed.smk"
     include: "rules/ATACseq/makeBedGraphSignalFC.smk"

@@ -88,12 +88,12 @@ def determine_lanes(fastqDir, samp):
     return list(set(lanes))
 
 # summary stats over the samples
-def sampleSummaryStats(temp, files, fastqDir, TSS):
+def sampleSummaryStats(temp, files, fastqDir, TSS=None):
     with open(temp, "w") as g:
         if temp == "tempSummary_atac.log":
-            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\tFRACTION_READS_IN_PEAKS\n")
+            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\tPEAK_INSERTIONS_TSS\tFRACTION_READS_IN_PEAKS\n")
         else:
-            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tPEAK_INSERTIONS_TSS\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\n")
+            g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\n")
         for ftp in files:
             g.write(ftp + '\t')
             raw_read=0
@@ -109,10 +109,6 @@ def sampleSummaryStats(temp, files, fastqDir, TSS):
             os.system("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
             g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
             g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
-            if os.path.exists(TSS):
-                g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS.log | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
-            else:
-                g.write("NA" +'\t')
             mycoplasma=0
             for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
                 mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
@@ -125,24 +121,33 @@ def sampleSummaryStats(temp, files, fastqDir, TSS):
             g.write(str(np.round(adapter, 2)) + '%')
             if temp == "tempSummary_atac.log":
                 g.write('\t')
+                g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS.log | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
                 g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "den=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; num=`bedtools sort -i " 
                     + ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam "
                     + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip())
                 # finish clean up into intermediates directory
+                os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
                 os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
                 os.system("rm -r " + ftp + "/.conda") # remove the conda software directory (it's big)
             g.write('\n')
             # finish clean up into intermediates directory
+            os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
+            os.system("mv " + ftp + "/*.trim.fastq.gz " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.trim.bam " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.st.bam " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.all.bam " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.chrM.bam " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.blft.bam " + ftp + "/intermediates/")
+            os.system("mv " + ftp + "/*.qft.bam " + ftp + "/intermediates/")
             os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
             os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/intermediates/")
-            os.system("mv " + ftp + "/*.st.bam " + ftp + "/intermediates/") # need to move trim.st.bam here rather than last rule
     return
 
 
 ################################
 # combine insert plots and summary (7)
 ################################
-def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS):
+def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq):
     output="fastq2bamRunSummary.log"
     files = []
     with open(sampleTxt, 'r') as ftp:
@@ -174,14 +179,13 @@ def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklis
         f.write("PARAMETERS\n")
         f.write("##########\n")
         f.write("genome reference for aligning: " + genomeRef + '\n')
-        f.write("blacklist for filtering: " + blacklist + '\n')
+        f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
-        f.write("TSS bed file for insertion calculation: " + TSS + '\n')
         f.write("align command: " + align + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
-        sampleSummaryStats(temp, files, fastqDir, TSS)
+        sampleSummaryStats(temp, files, fastqDir)
    # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -225,7 +229,7 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("PARAMETERS" + '\n')
         f.write("##########\n")
         f.write("genome reference for aligning: " + genomeRef + '\n')
-        f.write("blacklist for filtering: " + blacklist + '\n')
+        f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
         f.write("TSS bed file for insertion calculation: " + TSS + '\n')
         f.write("chromosome sizes: " + chromSize + '\n')
@@ -255,7 +259,6 @@ if __name__ == '__main__':
     genomeRef=sys.argv[6]
     blacklist=sys.argv[7]
     mapq=sys.argv[8]
-    TSS=sys.argv[9]
     sums=0
     for i in range(1,numSamples+1):
         f=open('slurm-' + slurm + '_' + str(i) + '.out', 'r')
@@ -265,8 +268,9 @@ if __name__ == '__main__':
         f.close()
     if (sums < numSamples):
         if (not run):
-            fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS)
+            fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq)
         else:
+            TSS=sys.argv[9]
             chromSize=sys.argv[10]
             ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS, chromSize)
     else:
