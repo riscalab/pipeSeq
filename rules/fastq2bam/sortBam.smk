@@ -13,5 +13,5 @@ rule sortBam:
     params:
         "{pre_tag}_{post_tag}.trim.st.bam"
     run:
-        shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate")
+        shell("picard SortSam  I={input}  O={params}  SORT_ORDER=coordinate MAX_RECORDS_IN_RAM=null")
         shell("mv {params} {output}")
