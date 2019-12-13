@@ -21,7 +21,7 @@ rule removeDuplicates:
     run:
         # histogram with duplicates
         print("Histogram with duplicates")
-        shell("picard CollectInsertSizeMetrics I={input} O={params.histDupsLog} H={params.histDupsPDF} W={params.width} STOP_AFTER={params.stopAfter MAX_RECORDS_IN_RAM=null}")
+        shell("picard CollectInsertSizeMetrics I={input} O={params.histDupsLog} H={params.histDupsPDF} W={params.width} STOP_AFTER={params.stopAfter} MAX_RECORDS_IN_RAM=null")
         # remove duplicates
         print("Removing duplicates")
         shell("picard MarkDuplicates I={input} O={output} METRICS_FILE={params.dupsLog} REMOVE_DUPLICATES=true MAX_RECORDS_IN_RAM=null")
