@@ -128,7 +128,7 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
                 # finish clean up into intermediates directory
                 os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
                 os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
-                os.system("rm -r " + ftp + "/.conda") # remove the conda software directory (it's big)
+                os.system("rm -r " + ftp + "/.conda") # remove the conda software directory (NECESSARY TO SAVE DISK QUOTA SPACE)
             g.write('\n')
             # finish clean up into intermediates directory
             os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
@@ -141,6 +141,8 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
             os.system("mv " + ftp + "/*.qft.bam " + ftp + "/intermediates/")
             os.system("mv " + ftp + "/*.bai " + ftp + "/intermediates/")
             os.system("mv " + ftp + "/" + ftp + ".idxstats.dat " + ftp + "/intermediates/")
+            # remove the .snakemake folder upon successful completion
+            os.system("rm -rf ./snakemake")
     return
 
 
