@@ -23,7 +23,7 @@ rule callPeakSummits:
     params:
         config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac"
     conda:
-        "../../envs/macs2_python2.yml" # path relative to current file, not working directory
+        "../../envs/macs2_python2.yaml" # path relative to current file, not working directory
     shell:
         callpeak # macs2 callpeak command defined above
 

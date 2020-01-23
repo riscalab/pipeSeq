@@ -19,6 +19,6 @@ rule makeBedGraphSignalFC:
     output:
         config['sample'] + "/peakCalls/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac_FE.bdg"
     conda:
-        "../../envs/macs2_python2.yml" # path relative to current file, not working directory
+        "../../envs/macs2_python2.yaml" # path relative to current file, not working directory
     shell:
         bdgcmpfc # macs2 bgdcmp command defined above for fold change

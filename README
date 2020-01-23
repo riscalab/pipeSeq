@@ -91,10 +91,10 @@ must be in ATACseq or base conda environment
 
 macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
 was created and exported via:
-    conda activate macs2_python2
-    conda env export > /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/macs2_python2.yml
-    ln -s /rugpfs/fs0/risc_lab/store/risc_soft/anaconda2/envs/macs2_python2/macs2_python2.yml envs/
-(the YML file is symlinked to the envs/ directory)
+    conda activate macs2_python2 (now deleted but can be restored from YAML file)
+    conda env export > /rugpfs/fs0/risc_lab/store/risc_soft/YAML/macs2_python2.yaml
+    ln -s /rugpfs/fs0/risc_lab/store/risc_soft/YAML/macs2_python2.yaml envs/
+(the YAML file is symlinked to the envs/ directory)
 
 ##############
 file structure

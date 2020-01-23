@@ -226,7 +226,7 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
         f.write("picard version: 2.20.3-SNAPSHOT" + '\n') # DONT LIKE THIS but the following wont work #+ os.popen("picard SortSam --version").read() + '\n')
         f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n')
-        f.write("macs2 version: 2.1.2 <in macs2_python2.yml conda env>\n") # must update if macs2_python2 conda env is updated
+        f.write("macs2 version: 2.1.2 <in macs2_python2.yaml conda env>\n") # must update if macs2_python2 conda env is updated
         f.write("ucsc tools version: 2 (conda 332)\n\n") # must update if new version ever downloaded (shouldnt bc software dependencies)
         f.write("PARAMETERS" + '\n')
         f.write("##########\n")
