@@ -21,11 +21,11 @@ rule removeDuplicates:
     run:
         # histogram with duplicates
         print("Histogram with duplicates")
-        shell("picard CollectInsertSizeMetrics I={input} O={params.histDupsLog} H={params.histDupsPDF} W={params.width} STOP_AFTER={params.stopAfter} MAX_RECORDS_IN_RAM=null")
+        shell("picard CollectInsertSizeMetrics -Xmx4g I={input} O={params.histDupsLog} H={params.histDupsPDF} W={params.width} STOP_AFTER={params.stopAfter}")
         # remove duplicates
         print("Removing duplicates")
-        shell("picard MarkDuplicates I={input} O={output} METRICS_FILE={params.dupsLog} REMOVE_DUPLICATES=true MAX_RECORDS_IN_RAM=null")
+        shell("picard MarkDuplicates -Xmx4g I={input} O={output} METRICS_FILE={params.dupsLog} REMOVE_DUPLICATES=true")
         # histogram without duplicates
         shell("samtools index {output}")
         print("Histogram without duplicates")
-        shell("picard CollectInsertSizeMetrics I={output} O={params.histNoDupsLog} H={params.histNoDupsPDF} W={params.width} STOP_AFTER={params.stopAfter} MAX_RECORDS_IN_RAM=null")
+        shell("picard CollectInsertSizeMetrics -Xmx4g I={output} O={params.histNoDupsLog} H={params.histNoDupsPDF} W={params.width} STOP_AFTER={params.stopAfter}")

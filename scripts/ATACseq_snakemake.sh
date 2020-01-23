@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -n 3
+#SBATCH -mem 4000
 
 ######################
 # READ IN PARAMETERS #
