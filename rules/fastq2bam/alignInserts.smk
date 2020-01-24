@@ -22,7 +22,7 @@ rule alignInserts:
     output:
         bam = config['sample'] + "/{pre_tag}_{post_tag}.trim.unmerged.bam",
         alignLog = config['sample'] + "/{pre_tag}_{post_tag}.trim.alignlog",
-    threads: 18
+    threads: 9
     run:
         shell(align) # align command defined above
         shell("pigz {input.unzip1} {input.unzip2}") # zip

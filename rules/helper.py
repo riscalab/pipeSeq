@@ -16,7 +16,7 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # BOWTIE2 ALIGN COMMAND
-align = "(bowtie2 -X2000 -p{threads} -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align = "(bowtie2 -X2000 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
 
 # MACS2 PEAK CALL COMMAND
 callpeak = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
