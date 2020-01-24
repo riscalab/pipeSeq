@@ -13,4 +13,4 @@ rule enrichTSS:
     params:
         config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.RefSeqTSS"
     run:
-        shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a {input} -b {config[TSS]} -e 2000 -p ends -s 5 -v -u --atac -o {params}")
+        shell(workflow.basedir + "/scripts/pyMakeVplot_css_v01.py -a {input} -b {config[TSS]} -e 2000 -p ends -s 6 -v -u --atac -o {params}")
