@@ -14,7 +14,7 @@ rule bedGraph2bigWig:
         qft = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
         st = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
     run:
-        if (os.stat({input}).st_size > 50): 
+        if (os.stat(input[0]).st_size > 50): 
             shell("bedtools slop -i {input} -g {config[chromSize]} -b 0 | bedClip stdin {config[chromSize]} {params.qft}")
             shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
             shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
