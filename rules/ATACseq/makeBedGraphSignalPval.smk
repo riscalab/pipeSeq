@@ -24,4 +24,5 @@ rule makeBedGraphSignalPval:
     conda:
         "../../envs/macs2_python2.yaml" # path relative to current file, not working directory
     shell:
-        preS + ' ' + S + ' ' + bdgcmppval # macs2 bgdcmp command defined above for p value
+        preS + ' ' + S + ' ' + bdgcmppval + # macs2 bgdcmp command defined above for p value
+        ' || ' + 'echo "failure in macs2 bdgcmp poisson" > {output}'

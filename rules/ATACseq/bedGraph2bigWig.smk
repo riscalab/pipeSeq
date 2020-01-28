@@ -14,10 +14,13 @@ rule bedGraph2bigWig:
         qft = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.clip",
         st = config['sample'] + "/{dir}/{pre_tag}_{post_tag}{ext,.*}.rmdup.atac{ext2,.*}.bdg.st.clip"
     run:
-        shell("bedtools slop -i {input} -g {config[chromSize]} -b 0 | bedClip stdin {config[chromSize]} {params.qft}")
-        shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
-        shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
-        shell("rm {params.qft} {params.st}")
+        if (os.stat({input}).st_size > 50): 
+            shell("bedtools slop -i {input} -g {config[chromSize]} -b 0 | bedClip stdin {config[chromSize]} {params.qft}")
+            shell("LC_COLLATE=C sort -k1,1 -k2,2n {params.qft} > {params.st}")
+            shell("bedGraphToBigWig {params.st} {config[chromSize]} {output.bw}")
+            shell("rm {params.qft} {params.st}")
+        else: 
+            shell('cp {input} {output.bw}')
         # cleanup directory
         shell("if [ ! -d {config[sample]}/intermediates ]; then mkdir {config[sample]}/intermediates; fi")
         # this rule is duplicated for each sample, so actual clean up is in summary stats
