@@ -32,5 +32,5 @@ SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sampleText)
 echo $SAMPLE
 
 # run code
-snakemake --snakefile $exeDir/Snakefile --nolock --use-conda --conda-prefix $SAMPLE/.conda --rerun-incomplete --cores 3 $snakemake --config "pipe='$pipe'" "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "chromSize='$chromSize'" "sample='$SAMPLE'" 
+snakemake --snakefile $exeDir/Snakefile --nolock --use-conda --conda-prefix $SAMPLE/.conda --rerun-incomplete --cores 4 $snakemake --config "pipe='$pipe'" "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "TSS='$TSS'" "mapq='$mapq'" "chromSize='$chromSize'" "sample='$SAMPLE'" 
 
