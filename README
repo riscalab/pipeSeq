@@ -26,7 +26,7 @@ where:
         -g = genome reference for alignment (string, i.e. path/to/genome)
             default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
         -b = blacklist for filtering (string, i.e. path/to/blacklist)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed"
         -m = the map quality threshold for alignment (int, i.e. 30)
             default: "30"
         -p = any snakemake flags for compilation (string, i.e. --forcerun RULE)
