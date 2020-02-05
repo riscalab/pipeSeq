@@ -14,7 +14,7 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
 
 # parse the arguments
-while getopts c:f:s:g:b:t:m:z:p: option
+while getopts c:f:s:g:b:m:p: option
 do
 case "${option}"
 in
@@ -50,7 +50,7 @@ then
     elif  [ "$genomeMap"== "mm9" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
-        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/mm9/GENCODE/mouse.gencode.m4.tss.bed"
+        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/mm9/GENCODE/mouse.gencode.m1.tss.bed"
         chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
@@ -59,12 +59,15 @@ then
     elif [ "$genomeMap"== "mm10" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
-        #TSS=""
-        #chromSize=""
+        TSS="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Annotations/mouse.gencode.m7.tss.bed"
+        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/ATAC_blacklist.bed"
         fi
+    else
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9.\ntalk to nicole to get your genome on the cluster if not there.\n"
+        exit
     fi
 else
     genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"

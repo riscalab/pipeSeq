@@ -59,6 +59,9 @@ then
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/mm10-blacklist.v2.bed"
         fi
+    else
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9.\ntalk to nicole to get your genome on the cluster if not there.\n"
+        exit
     fi
 else
     genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
