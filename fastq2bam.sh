@@ -38,21 +38,21 @@ fi
 # check genomeMap to align to correct genome with either assumed or specified blacklist
 if [ "$genomeMap" != "hg38" ]
 then 
-    if [ "$genomeMap"== "hg19" ]
+    if [ "$genomeMap" == "hg19" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/hg19-blacklist.v2.bed"
         fi
-    elif  [ "$genomeMap"== "mm9" ]
+    elif  [ "$genomeMap" == "mm9" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/mm9-blacklist.bed"
         fi
-    elif [ "$genomeMap"== "mm10" ]
+    elif [ "$genomeMap" == "mm10" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]

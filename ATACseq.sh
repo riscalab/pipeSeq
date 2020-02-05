@@ -38,7 +38,7 @@ fi
 # check genomeMap to align to correct genome with either assumed or specified blacklist
 if [ "$genomeMap" != "hg38" ]
 then 
-    if [ "$genomeMap"== "hg19" ]
+    if [ "$genomeMap" == "hg19" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/Sequence/Bowtie2Index/genome"
         TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg19/GENCODE/gencode.v19.tss.bed"
@@ -47,7 +47,7 @@ then
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/ATAC_blacklist.bed"
         fi
-    elif  [ "$genomeMap"== "mm9" ]
+    elif  [ "$genomeMap" == "mm9" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
         TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/mm9/GENCODE/mouse.gencode.m1.tss.bed"
@@ -56,7 +56,7 @@ then
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/ATAC_blacklist.bed"
         fi
-    elif [ "$genomeMap"== "mm10" ]
+    elif [ "$genomeMap" == "mm10" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
         TSS="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Annotations/mouse.gencode.m7.tss.bed"
