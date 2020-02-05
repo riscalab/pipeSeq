@@ -6,11 +6,8 @@
 ##################
 
 # set the default arguments for optional parameters
-genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
-blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
-TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
+genomeMap="hg38"
 mapq=30
-chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 snakemake=""
 # this is for ease of development
 exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq" 
@@ -24,11 +21,9 @@ in
 c) cwd=${OPTARG};; # working directory for analysis (REQUIRED, i.e. path/to/workingDirectory)
 f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. path/to/fastq)
 s) sampleText=${OPTARG};; # sample names text file (REQUIRED, string, i.e. path/to/samples.txt)
-g) genomeRef=${OPTARG};; # genome reference for alignment (OPTIONAL, string, i.e. path/to/genome.fa)
-b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, i.e. path/to/blacklist)
-t) TSS=${OPTARG};; # TSS for that genome (OPTIONAL, string, i.e. path/to/TSS) 
+g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
-z) chromSize=${OPTARG};;  # sizes of chromosomes (string, i.e. path/to/genome/file)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
 esac
 done
@@ -39,6 +34,48 @@ then
     echo "must specificy the desired working directory (c), fastq directory (f), and text file with sample names (s)"
     exit
 fi
+
+# check genomeMap to align to correct genome with either assumed or specified blacklist
+if [ "$genomeMap" != "hg38" ]
+then 
+    if [ "$genomeMap"== "hg19" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/Sequence/Bowtie2Index/genome"
+        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg19/GENCODE/gencode.v19.tss.bed"
+        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/chrom.sizes"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/ATAC_blacklist.bed"
+        fi
+    elif  [ "$genomeMap"== "mm9" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
+        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/mm9/GENCODE/mouse.gencode.m4.tss.bed"
+        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/chrom.sizes"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/ATAC_blacklist.bed"
+        fi
+    elif [ "$genomeMap"== "mm10" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
+        #TSS=""
+        #chromSize=""
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/ATAC_blacklist.bed"
+        fi
+    fi
+else
+    genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
+    TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
+    chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
+    if [ -z "$blacklist" ]
+    then
+        blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+    fi
+fi
+echo "alinging to $genomeRef with blacklist $blacklist with chromosome sizes $chromSize and TSS locations $TSS"
 
 # change working directory
 cd $cwd

@@ -23,12 +23,12 @@ where:
     <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
     <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
     -<opts> additional options:
-        -g = genome reference for alignment (string, i.e. path/to/genome)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
-        -b = blacklist for filtering (string, i.e. path/to/blacklist)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed"
+        -g = genome reference for alignment (string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+            default: hg38
+        -b = blacklist for filtering (string, defaults to -g blacklist OR overwrite with path/to/blacklist)
+            default: /rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed
         -m = the map quality threshold for alignment (int, i.e. 30)
-            default: "30"
+            default: 30
         -p = any snakemake flags for compilation (string, i.e. --forcerun RULE)
             default: ""
 
@@ -39,8 +39,8 @@ bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs 
 environment
 ###########
 
-must be in fastq2bam or base conda environment
-    conda activate fastq2bam
+must not be in any other conda environment except fastq2bam or base
+conda activate base
 
 ##############
 file structure
@@ -66,18 +66,14 @@ where:
     <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
     <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
     -<opts> additional options:
-        -g = genome reference for alignment (string, i.e. path/to/genome)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
-        -b = blacklist for filtering (string, i.e. path/to/blacklist)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        -g = genome reference for alignment (string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+            default: hg38
+        -b = blacklist for filtering (string, defaults to -g blacklist OR overwrite with path/to/blacklist)
+            default: /rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed
         -m = the map quality threshold for alignment (int, i.e. 30)
-            default: "30"
+            default: 30
         -p = any snakemake flags for compilation (string, i.e. unlock)
             default: ""
-        -t = BED file of TSS for that genome (string, i.e. path/to/TSS)
-            default: "/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
-        -z = sizes of chromosomes (string, i.e. path/to/genome/file)
-            default: "/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
 
 * example *
 bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
@@ -86,8 +82,8 @@ bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s
 environment
 ###########
 
-must be in ATACseq or base conda environment
-    conda activate ATACseq
+must not be in any other conda environment except ATACseq or base
+conda activate base
 
 macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
 was created and exported via:

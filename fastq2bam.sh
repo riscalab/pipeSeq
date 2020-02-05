@@ -6,8 +6,7 @@
 ##################
 
 # set the default arguments for optional parameters
-genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
-blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed"
+genomeMap="hg38"
 mapq=30
 snakemake=""
 # this is for ease of development
@@ -22,8 +21,8 @@ in
 c) cwd=${OPTARG};; # working directory for analysis (REQUIRED, i.e. path/to/workingDirectory)
 f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. path/to/fastq)
 s) sampleText=${OPTARG};; # sample names text file (REQUIRED, string, i.e. path/to/samples.txt)
-g) genomeRef=${OPTARG};; # genome reference for alignment (OPTIONAL, string, i.e. path/to/genome.fa)
-b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, i.e. path/to/blacklist)
+g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
 esac
@@ -35,6 +34,40 @@ then
     echo "must specificy the desired working directory (c), fastq directory (f), and text file with sample names (s)"
     exit
 fi
+
+# check genomeMap to align to correct genome with either assumed or specified blacklist
+if [ "$genomeMap" != "hg38" ]
+then 
+    if [ "$genomeMap"== "hg19" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/hg19-blacklist.v2.bed"
+        fi
+    elif  [ "$genomeMap"== "mm9" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/mm9-blacklist.bed"
+        fi
+    elif [ "$genomeMap"== "mm10" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/mm10-blacklist.v2.bed"
+        fi
+    fi
+else
+    genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
+    if [ -z "$blacklist" ]
+    then
+        blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed"
+    fi
+fi
+echo "alinging to $genomeRef with blacklist $blacklist"
 
 # change working directory
 cd $cwd
