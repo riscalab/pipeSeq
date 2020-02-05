@@ -27,9 +27,11 @@ rule filterBam:
               fi
               if [ `samtools view -H {input} | grep chr | wc -l` == 0 ]
               then
-                  samtools view -o {output} {input} `seq 1 $num | sed -e "\$$aX"`
+                  samtools view -o {output} {input} `seq 1 $num | sed -e '\$aX'`
+                  echo `seq 1 $num | sed -e '\$aX'`
               else
-                  samtools view -o {output} {input} `seq 1 $num | sed 's/^/chr/' | sed -e "\$$achrX"`
+                  samtools view -o {output} {input} `seq 1 $num | sed 's/^/chr/' | sed -e '\$achrX'`
+                  echo `seq 1 $num | sed 's/^/chr/' | sed -e '\$achrX'`
               fi
               """)
         shell("samtools view -b {input} chrM > {params.chrM}")

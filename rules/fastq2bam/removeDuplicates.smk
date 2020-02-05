@@ -11,6 +11,7 @@ rule removeDuplicates:
     output:
         config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.bam"
     params:
+        sorted = config['sample'] + "/{pre_tag}_{post_tag}{ext}.SORT.bam",
         histDupsLog = config['sample'] + "/hist_data_withdups.log",
         histDupsPDF = config['sample'] + "/hist_graphwithdups.pdf",
         dupsLog = config['sample'] + "/dups.log",
@@ -19,6 +20,9 @@ rule removeDuplicates:
         stopAfter="5000000",
         width="1000"
     run:
+        # sort one more time after all filtering
+        shell("picard SortSam -Xmx8g I={input}  O={params.sorted}  SORT_ORDER=coordinate")
+        shell("mv {params.sorted} {input}")
         # histogram with duplicates
         print("Histogram with duplicates")
         shell("picard CollectInsertSizeMetrics -Xmx8g I={input} O={params.histDupsLog} H={params.histDupsPDF} W={params.width} STOP_AFTER={params.stopAfter}")

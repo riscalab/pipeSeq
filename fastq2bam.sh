@@ -10,8 +10,8 @@ genomeMap="hg38"
 mapq=30
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
+#exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
 while getopts c:f:s:g:b:m:p: option

@@ -15,8 +15,8 @@ blacklist=$5
 mapq=$6
 snakemake=$7
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
+#exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
 
 ###########
 # EXECUTE #
