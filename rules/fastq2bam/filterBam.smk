@@ -19,11 +19,11 @@ rule filterBam:
               if [ `echo {config[genomeRef]} | grep hg'[0-9]\{{2\}}' | wc -l` != 0 ]
               then
                   num=22
-                  mito="MT"
+                  mito="M"
               elif [ `echo {config[genomeRef]} | grep mm'[0-9]\{{2\}}' | wc -l` != 0 ]
               then 
                   num=19
-                  mito="M"
+                  mito="MT"
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
