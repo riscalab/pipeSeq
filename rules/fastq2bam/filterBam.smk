@@ -19,9 +19,11 @@ rule filterBam:
               if [ `echo {config[genomeRef]} | grep hg'[0-9]\{{2\}}' | wc -l` != 0 ]
               then
                   num=22
+                  mito="MT"
               elif [ `echo {config[genomeRef]} | grep mm'[0-9]\{{2\}}' | wc -l` != 0 ]
               then 
                   num=19
+                  mito="M"
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
@@ -29,9 +31,10 @@ rule filterBam:
               then
                   samtools view -o {output} {input} `seq 1 $num | sed -e '\$aX'`
                   echo `seq 1 $num | sed -e '\$aX'`
+                  samtools view -b {input} $mito > {params.chrM}
               else
                   samtools view -o {output} {input} `seq 1 $num | sed 's/^/chr/' | sed -e '\$achrX'`
                   echo `seq 1 $num | sed 's/^/chr/' | sed -e '\$achrX'`
+                  samtools view -b {input} chr$mito > {params.chrM}
               fi
               """)
-        shell("samtools view -b {input} chrM > {params.chrM}")
