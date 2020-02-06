@@ -16,14 +16,18 @@ rule filterBam:
         shell("samtools index {input}")
         print("Removing reads from unwanted chromosomes and scaffolds")
         shell("""
-              if [ `echo {config[genomeRef]} | grep hg'[0-9]\{{2\}}' | wc -l` != 0 ]
+              if [ `echo {config[genomeRef]} | grep hg38 | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep hg19 | wc -l` != 0 ]
               then
                   num=22
                   mito="M"
-              elif [ `echo {config[genomeRef]} | grep mm'[0-9]\{{2\}}' | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep mm10 | wc -l` != 0 ]
               then 
                   num=19
                   mito="MT"
+              elif [ `echo {config[genomeRef]} | grep mm9 | wc -l` != 0 ]
+              then 
+                  num=19
+                  mito="M"
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
