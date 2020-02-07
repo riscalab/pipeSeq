@@ -128,7 +128,6 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
                 # finish clean up into intermediates directory
                 os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
                 os.system("mv " + ftp + "/*.atac.bam " + ftp + "/intermediates/")
-                os.system("rm -r " + ftp + "/.conda") # remove the conda software directory (NECESSARY TO SAVE DISK QUOTA SPACE)
             g.write('\n')
             # finish clean up into intermediates directory
             os.system("if [ ! -d " + ftp + "/intermediates ]; then mkdir " + ftp + "/intermediates; fi")
