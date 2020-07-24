@@ -10,8 +10,8 @@ genomeMap="hg38"
 mapq=30
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
+#exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
 while getopts c:f:s:g:b:m:p: option
@@ -59,8 +59,22 @@ then
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/mm10-blacklist.v2.bed"
         fi
+    elif [ "$genomeMap" == "dm6" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/dm6/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/dm6/blacklist/dm6-blacklist.v2.bed"
+        fi
+    elif [ "$genomeMap" == "EF2" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/S_pombe_EF2/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9.\ntalk to nicole to get your genome on the cluster if not there.\n"
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6.\ntalk to nicole to get your genome on the cluster if not there.\n"
         exit
     fi
 else
