@@ -107,7 +107,7 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
             g.write(str(raw_read) + '\t')
             palign=0
             for lane in determine_lanes(fastqDir, ftp):
-                palign+=float(os.popen("awk '{{if (FNR == 15) print $1}}' " + ftp + "/*" + lane + "*.alignlog").read().strip()[0:-1])/len(determine_lanes(fastqDir, ftp))
+                palign+=float(os.popen("tail -n1 " + ftp + "/*" + lane + "*.alignlog | awk '{{print $1}}'").read().strip()[0:-1])/len(determine_lanes(fastqDir, ftp))
             g.write(str(np.round(palign, 2)) + '%\t')
             g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
             g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
