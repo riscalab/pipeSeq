@@ -6,7 +6,8 @@ for detailed information/instructions: https://drive.google.com/open?id=1YnMXziT
 available pipelines:
 ####################
 fastq2bam (general processing)
-ATACseq (runs fastq2bam + additional processing) 
+ATACseq (runs fastq2bam + then calls peaks and other stats) 
+CUTnTag (runs fastq2bam but with different alignment command)
 
 #########################################################################################
 fastq2bam: align fastq data into bam format and produce quality metrics of the sequencing
@@ -101,3 +102,6 @@ Snakefile <constructs pipeline from rules>
 rules/* <rules for executable pipeline with helper code>
 scripts/* <R, python, or bash scripts to call in pipeline>
 envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
+
+##############
+will update here with CUTnTag soon 

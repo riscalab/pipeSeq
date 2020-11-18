@@ -16,22 +16,27 @@ exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
 #exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # BOWTIE2 ALIGN COMMAND
-align = "(bowtie2 -X2000 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align_CUTnTag = "(bowtie2 --end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align_fastq2bam = "(bowtie2 -X2000 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
 
 # MACS2 PEAK CALL COMMAND
-callpeak = "macs2 callpeak -f BAMPE -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
+callpeak_ATACseq = "macs2 callpeak -f BAMPE -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
 
 # BAMTOBEDGRAPH COMMAND
-bam2bg = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
+bam2bg_ATACseq = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
 
 # determine sample names and sample numbers from the working directory
-def findFiles(fastqDir, samp): 
+def findFiles(fastqDir, samp):
     WHOLEFILES = []
-    for base, dirs, files in os.walk(fastqDir + "/"):
-        for fastq in files:
-            if fastq.endswith(".fastq.gz") and samp == fastq.split("_")[0]:
-                tmp = fastq.split(".fastq.gz")[0]
-                WHOLEFILES.append(tmp.split('_'))
+    try:
+        for base, dirs, files in os.walk(fastqDir + "/"):
+            for fastq in files:
+                if fastq.endswith(".fastq.gz") and samp == fastq.split("_")[0]:
+                    tmp = fastq.split(".fastq.gz")[0]
+                    WHOLEFILES.append(tmp.split('_'))
+    except:
+        print('could not find gzipped FASTQ files (ending in fastq.gz) OR could not find FATSQ file for given sample ' + samp + '/nmake sure that the SAMPLE NAME DOES NOT HAVE UNDERSCORES (_)\n')
+        sys.exit()
     return WHOLEFILES
 
 # generate structure of expected files 
@@ -182,7 +187,7 @@ def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklis
         f.write("genome reference for aligning: " + genomeRef + '\n')
         f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
-        f.write("align command: " + align + '\n\n')
+        f.write("align command: " + align_fastq2bam + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
@@ -234,13 +239,60 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("map quality threshold for filtering: " + mapq + '\n')
         f.write("TSS bed file for insertion calculation: " + TSS + '\n')
         f.write("chromosome sizes: " + chromSize + '\n')
-        f.write("align command: " + align + '\n')
-        f.write("peak call command: " + callpeak + '\n')
-        f.write("bam to bedgraph command: " + bam2bg + '\n\n')
+        f.write("align command: " + align_fastq2bam + '\n')
+        f.write("peak call command: " + callpeak_ATACseq + '\n')
+        f.write("bam to bedgraph command: " + bam2bg_ATACseq + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
         sampleSummaryStats(temp, files, fastqDir, TSS)
+   # append summary log to rest of summary
+    os.system("cat " + temp + " | column -t >> " + output)
+    os.system("rm " + temp)
+    return
+
+################################
+# combine insert plots and summary (7)
+################################
+def CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq):
+    output="CUTnTagRunSummary.log"
+    files = []
+    with open(sampleTxt, 'r') as ftp:
+        for line in ftp:
+            files.append(line.strip())
+    temp = "tempSummary_cut.log"
+    # make nice pdf of insert distributions
+    os.system("Rscript " + exeDir + "/scripts/plotisds_v2.R " + sampleTxt + " hist_data_withoutdups")
+    print('\n############################')
+    print('  CUTnTag  pipeline complete')
+    print('\n############################')
+    # get git commit of current pipeline
+    pcommit = subprocess.Popen(["git", "rev-parse", "HEAD"], cwd="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq", stdout=subprocess.PIPE)
+    pcommit.wait()
+    with open(output, "w") as f:
+        f.write('user: ' + os.environ.get('USER') + '\n')
+        f.write('date: ' + datetime.datetime.now().isoformat() + '\n')
+        f.write("invocation command: " + invocationCommand + '\n\n')
+        f.write("SOFTWARE\n")
+        f.write("########\n")
+        f.write("pipeline version (pipeSeq git commit): " + pcommit.stdout.read().decode().strip() + '\n')
+        f.write("python version: " + '.'.join(np.asarray(sys.version_info, dtype='str')[0:3]) + '\n')
+        f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
+        f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
+        f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
+        f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
+        f.write("picard version: 2.20.3-SNAPSHOT" + '\n') # DONT LIKE THIS but the following wont work #+ os.popen("picard SortSam --version").read() + '\n')
+        f.write("bedtools version: " + os.popen("bedtools --version").read().strip() + '\n\n')
+        f.write("PARAMETERS\n")
+        f.write("##########\n")
+        f.write("genome reference for aligning: " + genomeRef + '\n')
+        f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
+        f.write("map quality threshold for filtering: " + mapq + '\n')
+        f.write("align command: " + align_CUTnTag + '\n\n')
+        f.write("SUMMARY\n")
+        f.write("#######\n")
+        # summary stats over the samples
+        sampleSummaryStats(temp, files, fastqDir)
    # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -268,11 +320,13 @@ if __name__ == '__main__':
             sums+=1
         f.close()
     if (sums < numSamples):
-        if (not run):
+        if run == 0:
             fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq)
-        else:
+        elif run == 1:
             TSS=sys.argv[9]
             chromSize=sys.argv[10]
             ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS, chromSize)
+        elif run == 2:
+            CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq)
     else:
         print('data was not processed further')

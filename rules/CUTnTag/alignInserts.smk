@@ -9,7 +9,7 @@ import rules.helper
 # commands with custom flags
 ################################      
 
-align = helper.align_fastq2bam # go to helper file to see / edit align command
+align = helper.align_CUTnTag # go to helper file to see / edit align command
 
 ################################
 # align inserts to genome (3)

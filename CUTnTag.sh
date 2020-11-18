@@ -1,5 +1,5 @@
 #!/bin/bash
-# npagane | risca lab | oct 2019 | ATACseq pipeline wrapper to execute
+# npagane | risca lab | oct 2019 | CUTnTag pipeline wrapper to execute
 
 ##################
 # SET PARAMETERS #
@@ -10,8 +10,8 @@ genomeMap="hg38"
 mapq=30
 snakemake=""
 # this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq" 
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
 while getopts c:f:s:g:b:m:p: option
@@ -41,35 +41,27 @@ then
     if [ "$genomeMap" == "hg19" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/Sequence/Bowtie2Index/genome"
-        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg19/GENCODE/gencode.v19.tss.bed"
-        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
-            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/ATAC_blacklist.bed"
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19/blacklist/hg19-blacklist.v2.bed"
         fi
     elif  [ "$genomeMap" == "mm9" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/Sequence/Bowtie2Index/genome"
-        TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/mm9/GENCODE/mouse.gencode.m1.tss.bed"
-        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
-            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/ATAC_blacklist.bed"
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm9/blacklist/mm9-blacklist.bed"
         fi
     elif [ "$genomeMap" == "mm10" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Sequence/Bowtie2Index/genome"
-        TSS="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/Annotations/mouse.gencode.m7.tss.bed"
-        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
-            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/ATAC_blacklist.bed"
+            blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/mm10/blacklist/mm10-blacklist.v2.bed"
         fi
     elif [ "$genomeMap" == "dm6" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/dm6/genome/Sequence/Bowtie2Index/genome"
-        TSS="None"
-        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/dm6/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
             blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/dm6/blacklist/dm6-blacklist.v2.bed"
@@ -77,8 +69,6 @@ then
     elif [ "$genomeMap" == "EF2" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/S_pombe_EF2/genome/Sequence/Bowtie2Index/genome"
-        TSS="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/S_pombe_EF2/genome/Annotations/consensusTSS_thodberg2018.bed"
-        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/S_pombe_EF2/genome/chrom.sizes" 
         if [ -z "$blacklist" ]
         then
             blacklist="None"
@@ -89,34 +79,32 @@ then
     fi
 else
     genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/Sequence/Bowtie2Index/genome"
-    TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg38/GENCODE/gencode.v30.basic.annotation.tss.bed"
-    chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/genome/chrom.sizes"
     if [ -z "$blacklist" ]
     then
-        blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed"
+        blacklist="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed"
     fi
 fi
-echo "alinging to $genomeRef with blacklist $blacklist with chromosome sizes $chromSize and TSS locations $TSS"
+echo "alinging to $genomeRef with blacklist $blacklist"
 
 # change working directory
 cd $cwd
 
 # set conda env
-source activate ATACseq
+source activate fastq2bam
 
-# run ATACseq
+# run CUTnTag 
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-ATACseq=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $snakemake)
+CUTnTag=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/CUTnTag_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq $snakemake)
 
 # get job id
-if ! echo ${ATACseq} | grep -q "[1-9][0-9]*$"; then
+if ! echo ${CUTnTag} | grep -q "[1-9][0-9]*$"; then
    echo "Job(s) submission failed."
-   echo ${ATACseq}
+   echo ${CUTnTag}
    exit 1
 else
-   ATACseqID=$(echo ${ATACseq} | grep -oh "[1-9][0-9]*$")
+   CUTnTagID=$(echo ${CUTnTag} | grep -oh "[1-9][0-9]*$")
 fi
 
-# summary stats for fastq2bam after successful completion
+# summary stats for CUTnTag after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $TSS $chromSize"
+sbatch -p risc,hpc --depend=afterok:$CUTnTagID --wrap="python $exeDir/rules/helper.py 2 $CUTnTagID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq"

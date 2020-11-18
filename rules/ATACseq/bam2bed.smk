@@ -9,7 +9,7 @@ import rules.helper
 # commands with custom flags
 ################################      
 
-bam2bg = helper.bam2bg # go to helper file to see / edit bam2bg command
+bam2bg = helper.bam2bg_ATACseq # go to helper file to see / edit bam2bg command
 
 ################################
 # make tracks genomecov (3)

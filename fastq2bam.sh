@@ -10,8 +10,8 @@ genomeMap="hg38"
 mapq=30
 snakemake=""
 # this is for ease of development
-#exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
+exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
+#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
 
 # parse the arguments
 while getopts c:f:s:g:b:m:p: option
@@ -74,7 +74,7 @@ then
             blacklist="None"
         fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6.\ntalk to nicole to get your genome on the cluster if not there.\n"
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2.\ntalk to nicole to get your genome on the cluster if not there.\n"
         exit
     fi
 else

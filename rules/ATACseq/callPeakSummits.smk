@@ -9,7 +9,7 @@ import rules.helper
 # commands with custom flags
 ################################      
 
-callpeak = helper.callpeak # go to helper file to see / edit callpeak command
+callpeak = helper.callpeak_ATACseq # go to helper file to see / edit callpeak command
 
 ################################
 # call peaks to make bed (2)

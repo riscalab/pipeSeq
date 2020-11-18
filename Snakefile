@@ -47,11 +47,25 @@ if config['pipe'] == 'ATACseq':
                     ".trim.st.all.RefSeqTSS.log"
                 ), config['fastqDir'], config['sample'], 
             )
+elif config['pipe'] == 'CUTnTag':
+    # THIS WHILL CHANGE IN THE FUTURE. WILL ADD PEAK STUFF BUT FOR NOW MAKE IT LIKE fastq2bam
+    rule all:
+        input:
+            helper.customFileExpand(
+                # final BAMs
+                helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
+                    ".trim.st.all.blft.qft.rmdup.bam",
+                    ".trim.st.all.qft.rmdup.bam",
+                    ".trim.st.all.blft.rmdup.bam",
+                    ".trim.st.all.rmdup.bam"
+                ), config['fastqDir'], config['sample']
+            )
+ 
 else: # default to fastq2bam
     rule all:
         input:
-            # final processed (removed duplicates bam)
             helper.customFileExpand(
+                # final BAMs
                 helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                     ".trim.st.all.blft.qft.rmdup.bam",
                     ".trim.st.all.qft.rmdup.bam",
@@ -65,19 +79,29 @@ else: # default to fastq2bam
 # rules for pipeline
 ################################
 
-# assume general fastq2bam rules (THIS WILL NEED TO CHANGE WHEN RICC SEQ ADDED)
-
-include: "rules/fastq2bam/trimAdapters.smk"
-include: "rules/fastq2bam/fastqcAndScreen.smk"
-include: "rules/fastq2bam/alignInserts.smk"
-include: "rules/fastq2bam/mergeBamIfNecessary.smk"
-include: "rules/fastq2bam/sortBam.smk"
-include: "rules/fastq2bam/filterBam.smk"
-include: "rules/fastq2bam/blacklistFilter.smk"
-include: "rules/fastq2bam/qualityFilter.smk"
-include: "rules/fastq2bam/removeDuplicates.smk"
+if config['pipe'] == 'fastq2bam':
+    include: "rules/fastq2bam/trimAdapters.smk"
+    include: "rules/fastq2bam/fastqcAndScreen.smk"
+    include: "rules/fastq2bam/alignInserts.smk"
+    include: "rules/fastq2bam/mergeBamIfNecessary.smk"
+    include: "rules/fastq2bam/sortBam.smk"
+    include: "rules/fastq2bam/filterBam.smk"
+    include: "rules/fastq2bam/blacklistFilter.smk"
+    include: "rules/fastq2bam/qualityFilter.smk"
+    include: "rules/fastq2bam/removeDuplicates.smk"
 
 if config['pipe'] == 'ATACseq':
+    # fastq2bam stuff
+    include: "rules/fastq2bam/trimAdapters.smk"
+    include: "rules/fastq2bam/fastqcAndScreen.smk"
+    include: "rules/fastq2bam/alignInserts.smk"
+    include: "rules/fastq2bam/mergeBamIfNecessary.smk"
+    include: "rules/fastq2bam/sortBam.smk"
+    include: "rules/fastq2bam/filterBam.smk"
+    include: "rules/fastq2bam/blacklistFilter.smk"
+    include: "rules/fastq2bam/qualityFilter.smk"
+    include: "rules/fastq2bam/removeDuplicates.smk"
+    # ATACseq stuff
     include: "rules/ATACseq/ATACoffset.smk"
     include: "rules/ATACseq/enrichTSS.smk"
     include: "rules/ATACseq/callPeakSummits.smk"
@@ -85,3 +109,16 @@ if config['pipe'] == 'ATACseq':
     include: "rules/ATACseq/makeBedGraphSignalFC.smk"
     include: "rules/ATACseq/makeBedGraphSignalPval.smk"
     include: "rules/ATACseq/bedGraph2bigWig.smk"
+
+if config['pipe'] == 'CUTnTag':
+    # fastq2bam stuff
+    include: "rules/fastq2bam/trimAdapters.smk"
+    include: "rules/fastq2bam/fastqcAndScreen.smk"
+    include: "rules/CUTnTag/alignInserts.smk" # only aligning is different for now
+    include: "rules/fastq2bam/mergeBamIfNecessary.smk"
+    include: "rules/fastq2bam/sortBam.smk"
+    include: "rules/fastq2bam/filterBam.smk"
+    include: "rules/fastq2bam/blacklistFilter.smk"
+    include: "rules/fastq2bam/qualityFilter.smk"
+    include: "rules/fastq2bam/removeDuplicates.smk"
+
