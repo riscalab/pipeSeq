@@ -11,16 +11,15 @@ import subprocess
 # parameters and functions
 ################################
 
-# this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
-
 # BOWTIE2 ALIGN COMMAND
 align_CUTnTag = "(bowtie2 --end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align_CUTnTag_SE = "(bowtie2 --end-to-end --very-sensitive --no-mixed --no-discordant --phred33 -I 10 -X 700 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -U {input.unzip} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
 align_fastq2bam = "(bowtie2 -X2000 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -1 {input.unzip1} -2 {input.unzip2} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
+align_fastq2bam_SE = "(bowtie2 -X2000 -p`expr 2 '*' {threads}` -x {config[genomeRef]} -U {input.unzip} | samtools view -bS - -o {output.bam}) 2>{output.alignLog}"
 
 # MACS2 PEAK CALL COMMAND
 callpeak_ATACseq = "macs2 callpeak -f BAMPE -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
+callpeak_ATACseq_SE = "macs2 callpeak -f BAM -t {input} -n {params} -B --SPMR --nomodel --shift -37 --extsize 73 --nolambda --keep-dup all --call-summits --slocal 10000" # or -75 150
 
 # BAMTOBEDGRAPH COMMAND
 bam2bg_ATACseq = "bedtools genomecov -ibam {input} -5 -bg -g {config[chromSize]} > {output.bg}"
@@ -93,7 +92,7 @@ def determine_lanes(fastqDir, samp):
     return list(set(lanes))
 
 # summary stats over the samples
-def sampleSummaryStats(temp, files, fastqDir, TSS=None):
+def sampleSummaryStats(temp, files, fastqDir, singleend, TSS=None):
     with open(temp, "w") as g:
         if temp == "tempSummary_atac.log":
             g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\tPEAK_INSERTIONS_TSS\tFRACTION_READS_IN_PEAKS\n")
@@ -101,9 +100,13 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
             g.write("SAMPLE\tRAW_READ_PAIRS\tPERCENT_ALIGNED\tESTIMATED_LIBRARY_SIZE\tPERCENT_DUPLICATED\tPERCENT_MITOCHONDRIAL\tREAD_PAIRS_POST_FILTER\tAVG_MYCOPLASMA_MAP\tADAPTER_MAP\n")
         for ftp in files:
             g.write(ftp + '\t')
-            raw_read=0
-            for lane in determine_lanes(fastqDir, ftp):
-                raw_read+=int(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/*" + lane + "*adapter_trim.log").read().strip())
+            raw_read = 0
+            if singleend == 'True':
+                for lane in determine_lanes(fastqDir, ftp):
+                    raw_read+=int(os.popen("tail -3 " + ftp + "/*" + lane + "*adapter_trim.log | head -1 | awk '{{print $1}}'").read().strip())
+            else:
+                for lane in determine_lanes(fastqDir, ftp):
+                    raw_read+=int(os.popen("awk '{{if (FNR == 1) print $1}}' " + ftp + "/*" + lane + "*adapter_trim.log").read().strip())
             g.write(str(raw_read) + '\t')
             palign=0
             for lane in determine_lanes(fastqDir, ftp):
@@ -111,18 +114,29 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
             g.write(str(np.round(palign, 2)) + '%\t')
             g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
             g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
-            os.system("samtools idxstats " + ftp + "/*trim.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
+            os.system("samtools idxstats " + ftp + "/*.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
             g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
             g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
             mycoplasma=0
-            for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
-                mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
-                    + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+            if singleend == 'True':
+                for lane in determine_lanes(fastqDir, ftp):
+                    mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
+                        + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+            else:
+                for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
+                    mycoplasma+=float(os.popen("""awk 'index($1, "plasma")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
+                        + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
             g.write(str(np.round(mycoplasma, 2)) + '%\t')
             adapter=0
-            for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
-                adapter+=float(os.popen("""awk 'index($1, "Adapters")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ 
-                    + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+            if singleend == 'True':
+                for lane in determine_lanes(fastqDir, ftp):
+                    adapter+=float(os.popen("""awk 'index($1, "Adapters")' """ + ftp + "/*" + lane + "*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """
+                        + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
+
+            else:
+                for lane in determine_lanes(fastqDir, ftp): # assume r1 is same as r2
+                    adapter+=float(os.popen("""awk 'index($1, "Adapters")' """ + ftp + "/*" + lane + "R1*trim_screen.txt " + """| awk '{{printf("%.2f\\n", 100*($2-$3)/$2)}}' """ 
+                        + "| sort -nrk1,1 | head -1").read().strip())/len(determine_lanes(fastqDir, ftp))
             g.write(str(np.round(adapter, 2)) + '%')
             if temp == "tempSummary_atac.log":
                 g.write('\t')
@@ -153,7 +167,7 @@ def sampleSummaryStats(temp, files, fastqDir, TSS=None):
 ################################
 # combine insert plots and summary (7)
 ################################
-def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq):
+def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir):
     output="fastq2bamRunSummary.log"
     files = []
     with open(sampleTxt, 'r') as ftp:
@@ -176,7 +190,10 @@ def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklis
         f.write("########\n")
         f.write("pipeline version (pipeSeq git commit): " + pcommit.stdout.read().decode().strip() + '\n')
         f.write("python version: " + '.'.join(np.asarray(sys.version_info, dtype='str')[0:3]) + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
+        if singleend == 'True':
+            f.write("cutadapt version (via trim_galore): " + os.popen("cutadapt --version").read().strip() + '\n')
+        else:
+            f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
@@ -187,11 +204,15 @@ def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklis
         f.write("genome reference for aligning: " + genomeRef + '\n')
         f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
-        f.write("align command: " + align_fastq2bam + '\n\n')
+        f.write("single-end sequencing (True) or paired-end sequencing (False): " + singleend + '\n')
+        if singleend == 'True':
+            f.write("align command: " + align_fastq2bam_SE + '\n\n')
+        else:
+            f.write("align command: " + align_fastq2bam + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
-        sampleSummaryStats(temp, files, fastqDir)
+        sampleSummaryStats(temp, files, fastqDir, singleend)
    # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -201,7 +222,7 @@ def fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklis
 ################################
 # success and summary (7)
 ################################
-def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS, chromSize):
+def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir, TSS, chromSize):
     output="ATACseqRunSummary.log"
     files = []
     with open(sampleTxt, 'r') as ftp:
@@ -224,7 +245,10 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("########\n")
         f.write("pipeline version (pipeSeq git commit): " + pcommit.stdout.read().decode().strip() + '\n')
         f.write("python version: " + '.'.join(np.asarray(sys.version_info, dtype='str')[0:3])  + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
+        if singleend == 'True':
+            f.write("cutadapt version (via trim_galore): " + os.popen("cutadapt --version").read().strip() + '\n')
+        else:
+            f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
@@ -239,13 +263,18 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("map quality threshold for filtering: " + mapq + '\n')
         f.write("TSS bed file for insertion calculation: " + TSS + '\n')
         f.write("chromosome sizes: " + chromSize + '\n')
-        f.write("align command: " + align_fastq2bam + '\n')
-        f.write("peak call command: " + callpeak_ATACseq + '\n')
+        f.write("single-end sequencing (True) or paired-end sequencing (False): " + singleend + '\n')
+        if singleend == 'True':
+            f.write("align command: " + align_fastq2bam_SE + '\n')
+            f.write("peak call command: " + callpeak_ATACseq_SE + '\n')
+        else:
+            f.write("align command: " + align_fastq2bam + '\n')
+            f.write("peak call command: " + callpeak_ATACseq + '\n')
         f.write("bam to bedgraph command: " + bam2bg_ATACseq + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
-        sampleSummaryStats(temp, files, fastqDir, TSS)
+        sampleSummaryStats(temp, files, fastqDir, singleend, TSS)
    # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -254,7 +283,7 @@ def ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
 ################################
 # combine insert plots and summary (7)
 ################################
-def CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq):
+def CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir):
     output="CUTnTagRunSummary.log"
     files = []
     with open(sampleTxt, 'r') as ftp:
@@ -277,7 +306,10 @@ def CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("########\n")
         f.write("pipeline version (pipeSeq git commit): " + pcommit.stdout.read().decode().strip() + '\n')
         f.write("python version: " + '.'.join(np.asarray(sys.version_info, dtype='str')[0:3]) + '\n')
-        f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
+        if singleend == 'True':
+            f.write("cutadapt version (via trim_galore): " + os.popen("cutadapt --version").read().strip() + '\n')
+        else:
+            f.write("pyadapter_trim version: python3 compatible (v1 or v2 (same but 4x faster))" + '\n')
         f.write("fastqc version: " + os.popen("fastqc --version").read().strip() + '\n')
         f.write("bowtie2 version: " + os.popen("bowtie2 --version").read().strip() + '\n')
         f.write("samtools version: " + os.popen("samtools --version").read().strip() + '\n')
@@ -288,11 +320,15 @@ def CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist,
         f.write("genome reference for aligning: " + genomeRef + '\n')
         f.write("blacklist for filtering: " + blacklist + " (file exists: " + str(os.path.exists(blacklist)) + ")" +'\n')
         f.write("map quality threshold for filtering: " + mapq + '\n')
-        f.write("align command: " + align_CUTnTag + '\n\n')
+        f.write("single-end sequencing (True) or paired-end sequencing (False): " + singleend + '\n')
+        if singleend == 'True':
+            f.write("align command: " + align_CUTnTag_SE + '\n\n')
+        else:
+            f.write("align command: " + align_CUTnTag + '\n\n')
         f.write("SUMMARY\n")
         f.write("#######\n")
         # summary stats over the samples
-        sampleSummaryStats(temp, files, fastqDir)
+        sampleSummaryStats(temp, files, singleend, fastqDir)
    # append summary log to rest of summary
     os.system("cat " + temp + " | column -t >> " + output)
     os.system("rm " + temp)
@@ -312,6 +348,8 @@ if __name__ == '__main__':
     genomeRef=sys.argv[6]
     blacklist=sys.argv[7]
     mapq=sys.argv[8]
+    singleend=sys.argv[9]
+    exeDir=sys.argv[10]
     sums=0
     for i in range(1,numSamples+1):
         f=open('slurm-' + slurm + '_' + str(i) + '.out', 'r')
@@ -321,12 +359,12 @@ if __name__ == '__main__':
         f.close()
     if (sums < numSamples):
         if run == 0:
-            fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq)
+            fastq2bamSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir)
         elif run == 1:
-            TSS=sys.argv[9]
-            chromSize=sys.argv[10]
-            ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, TSS, chromSize)
+            TSS=sys.argv[11]
+            chromSize=sys.argv[12]
+            ATACseqSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir, TSS, chromSize)
         elif run == 2:
-            CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq)
+            CUTnTagSummary(sampleTxt, invocationCommand, fastqDir, genomeRef, blacklist, mapq, singleend, exeDir)
     else:
         print('data was not processed further')

@@ -13,11 +13,11 @@ sampleText=$3
 genomeRef=$4
 blacklist=$5
 mapq=$6
-snakemake=$7
-# this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq"
+singleend=$7
+exeDir=$8
+snakemake=$9
 
+echo 'HELLO' $exeDir $pipe $singleend
 ###########
 # EXECUTE #
 ###########
@@ -32,5 +32,4 @@ SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p $sampleText)
 echo $SAMPLE
 
 # run code
-snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores 4 $snakemake --config "pipe='$pipe'" "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "mapq='$mapq'" "sample='$SAMPLE'" 
-
+snakemake --snakefile $exeDir/Snakefile --nolock --rerun-incomplete --cores 4 $snakemake --config "pipe='$pipe'" "fastqDir='$fastqDir'" "genomeRef='$genomeRef'" "blacklist='$blacklist'" "mapq='$mapq'" "sample='$SAMPLE'" "singleend='$singleend'"

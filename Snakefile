@@ -52,7 +52,6 @@ elif config['pipe'] == 'CUTnTag':
     rule all:
         input:
             helper.customFileExpand(
-                # final BAMs
                 helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                     ".trim.st.all.blft.qft.rmdup.bam",
                     ".trim.st.all.qft.rmdup.bam",
@@ -65,7 +64,6 @@ else: # default to fastq2bam
     rule all:
         input:
             helper.customFileExpand(
-                # final BAMs
                 helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
                     ".trim.st.all.blft.qft.rmdup.bam",
                     ".trim.st.all.qft.rmdup.bam",
@@ -80,9 +78,14 @@ else: # default to fastq2bam
 ################################
 
 if config['pipe'] == 'fastq2bam':
-    include: "rules/fastq2bam/trimAdapters.smk"
-    include: "rules/fastq2bam/fastqcAndScreen.smk"
-    include: "rules/fastq2bam/alignInserts.smk"
+    if config['singleend'] == 'True':
+        include: "rules/fastq2bam/single_end/trimAdapters.smk"
+        include: "rules/fastq2bam/single_end/fastqcAndScreen.smk"
+        include: "rules/fastq2bam/single_end/alignInserts.smk"
+    else:
+        include: "rules/fastq2bam/trimAdapters.smk"
+        include: "rules/fastq2bam/fastqcAndScreen.smk"
+        include: "rules/fastq2bam/alignInserts.smk"
     include: "rules/fastq2bam/mergeBamIfNecessary.smk"
     include: "rules/fastq2bam/sortBam.smk"
     include: "rules/fastq2bam/filterBam.smk"
@@ -92,9 +95,14 @@ if config['pipe'] == 'fastq2bam':
 
 if config['pipe'] == 'ATACseq':
     # fastq2bam stuff
-    include: "rules/fastq2bam/trimAdapters.smk"
-    include: "rules/fastq2bam/fastqcAndScreen.smk"
-    include: "rules/fastq2bam/alignInserts.smk"
+    if config['singleend'] == 'True':
+        include: "rules/fastq2bam/single_end/trimAdapters.smk"
+        include: "rules/fastq2bam/single_end/fastqcAndScreen.smk"
+        include: "rules/fastq2bam/single_end/alignInserts.smk"
+    else:
+        include: "rules/fastq2bam/trimAdapters.smk"
+        include: "rules/fastq2bam/fastqcAndScreen.smk"
+        include: "rules/fastq2bam/alignInserts.smk"
     include: "rules/fastq2bam/mergeBamIfNecessary.smk"
     include: "rules/fastq2bam/sortBam.smk"
     include: "rules/fastq2bam/filterBam.smk"
@@ -104,7 +112,10 @@ if config['pipe'] == 'ATACseq':
     # ATACseq stuff
     include: "rules/ATACseq/ATACoffset.smk"
     include: "rules/ATACseq/enrichTSS.smk"
-    include: "rules/ATACseq/callPeakSummits.smk"
+    if config['singleend'] == 'True':
+        include: "rules/ATACseq/single_end/callPeakSummits.smk"
+    else:
+        include: "rules/ATACseq/callPeakSummits.smk"
     include: "rules/ATACseq/bam2bed.smk"
     include: "rules/ATACseq/makeBedGraphSignalFC.smk"
     include: "rules/ATACseq/makeBedGraphSignalPval.smk"
@@ -112,13 +123,17 @@ if config['pipe'] == 'ATACseq':
 
 if config['pipe'] == 'CUTnTag':
     # fastq2bam stuff
-    include: "rules/fastq2bam/trimAdapters.smk"
-    include: "rules/fastq2bam/fastqcAndScreen.smk"
-    include: "rules/CUTnTag/alignInserts.smk" # only aligning is different for now
+    if config['singleend'] == 'True':
+        include: "rules/fastq2bam/single_end/trimAdapters.smk"
+        include: "rules/fastq2bam/single_end/fastqcAndScreen.smk"
+        include: "rules/CUTnTag/single_end/alignInserts.smk" # only aligning is different for now
+    else:
+        include: "rules/fastq2bam/trimAdapters.smk"
+        include: "rules/fastq2bam/fastqcAndScreen.smk"
+        include: "rules/CUTnTag/alignInserts.smk" # only aligning is different for now
     include: "rules/fastq2bam/mergeBamIfNecessary.smk"
     include: "rules/fastq2bam/sortBam.smk"
     include: "rules/fastq2bam/filterBam.smk"
     include: "rules/fastq2bam/blacklistFilter.smk"
     include: "rules/fastq2bam/qualityFilter.smk"
     include: "rules/fastq2bam/removeDuplicates.smk"
-

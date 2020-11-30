@@ -9,12 +9,37 @@
 genomeMap="hg38"
 mapq=30
 snakemake=""
-# this is for ease of development
-exeDir="/rugpfs/fs0/risc_lab/store/risc_soft/pipeSeq"
-#exeDir="/rugpfs/fs0/risc_lab/store/npagane/pipeSeq" 
+exeDir=`readlink -f $0`
+exeDir=`dirname $exeDir`
 
-# parse the arguments
-while getopts c:f:s:g:b:m:p: option
+function print_usage {
+    echo "USAGE: $0 [-c .] [-f /rugpfs/fs0/risc_lab/store/risc_data/runs/FASTQs] [-s sample.txt]"
+    echo "  -c   PATH   path to where you want to process the sequencing data"
+    echo "  -f   PATH   path to where your FASTQ files live"
+    echo "  -s   PATH   path to your samples.txt file that has all your sample names"
+    echo "OPTIONAL ARGUMENTS:"
+    echo "  -g=hg38      STRING  genome to align FATSQ files to (i.e. hg38, hg19, mm9, mm10, etc.)"
+    echo "  -b~hg38      PATH    path to where your blacklist file lives for filtering"
+    echo "  -m=30        INT     map quality threshold for alignment"
+    echo "  -p=''        STRING  additional snakemake flags and arguments for compilation"
+    echo "  --singleend          if FASTQ files are single-end rather than paired-end sequenced"
+    echo "  --help               print this usage text and exit"
+}
+
+# Transform long options to short ones
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--singleend") set -- "$@" "-e foo";;
+    "--help") set -- "$@" "-h bar" ;;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+# Parse short options
+singleend="False"
+OPTIND=1
+while getopts c:f:s:g:b:m:p:e:h: option
 do
 case "${option}"
 in
@@ -25,13 +50,19 @@ g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPT
 b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
+e) singleend="True";; # whether or not the sequenced data is single-end or not (i.e. paried-end)
+h) print_usage; exit 0;;
 esac
 done
+
+shift $(expr $OPTIND - 1) # remove options from positional parameters
 
 # check for required arguments
 if [ -z "$cwd" ] || [ -z "$fastqDir" ] || [ -z "$sampleText" ]
 then
-    echo "must specificy the desired working directory (c), fastq directory (f), and text file with sample names (s)"
+    echo "must specificy the desired working directory (-c), fastq directory (-f), and text file with sample names (-s)"
+    echo ""
+    print_usage
     exit
 fi
 
@@ -94,7 +125,7 @@ source activate fastq2bam
 
 # run CUTnTag 
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-CUTnTag=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/CUTnTag_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq $snakemake)
+CUTnTag=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/CUTnTag_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq  $singleend $exeDir $snakemake)
 
 # get job id
 if ! echo ${CUTnTag} | grep -q "[1-9][0-9]*$"; then
@@ -107,4 +138,4 @@ fi
 
 # summary stats for CUTnTag after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$CUTnTagID --wrap="python $exeDir/rules/helper.py 2 $CUTnTagID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq"
+sbatch -p risc,hpc --depend=afterok:$CUTnTagID --wrap="python $exeDir/rules/helper.py 2 $CUTnTagID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir"
