@@ -17,11 +17,12 @@ align = helper.align_CUTnTag_SE # go to helper file to see / edit align command
 
 rule alignInserts:
     input:
-        unzip = config['sample'] + "/{pre_tag}_{post_tag}.fastq",
+        unzip = config['sample'] + "/{pre_tag}_{post_tag}.trim.fastq",
     output:
-        bam = config['sample'] + "/{pre_tag}_{post_tag}.unmerged.bam",
-        alignLog = config['sample'] + "/{pre_tag}_{post_tag}.alignlog",
+        bam = config['sample'] + "/{pre_tag}_{post_tag}.trim.unmerged.bam",
+        alignLog = config['sample'] + "/{pre_tag}_{post_tag}.trim.alignlog",
     threads: 9
     run:
         shell(align) # align command defined above
         shell("pigz {input.unzip}") # zip
+
