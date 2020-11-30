@@ -13,7 +13,8 @@ rule trimAdapters:
     params:
         r = "{pre_tag}_{post_tag}_trimmed.fq.gz",
         summary = "{pre_tag}_{post_tag}.fastq.gz_trimming_report.txt"
+    threads: 2
     run:
-        shell("trim_galore {input.r}")
+        shell("trim_galore -j 2 --quality 0 --length 0 {input.r}")
         shell("mv {params.r} {output.r}")
         shell("mv {params.summary} {config[sample]}/{wildcards.pre_tag}_adapter_trim.log")
