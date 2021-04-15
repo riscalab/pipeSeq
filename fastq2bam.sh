@@ -104,8 +104,23 @@ then
         then
             blacklist="None"
         fi
+    elif [ "$genomeMap" == "HBV" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/HBV/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
+    elif [ "$genomeMap" == "HBV_PsiI" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/HBV_PsiI/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2.\ntalk to nicole to get your genome on the cluster if not there.\n"
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI."
+        echo "talk to nicole to get your genome on the cluster if not there.\n"
         exit
     fi
 else
