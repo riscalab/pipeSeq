@@ -16,6 +16,7 @@ rule filterBam:
         shell("samtools index {input}")
         print("Removing reads from unwanted chromosomes and scaffolds")
         shell("""
+              # continue to the next section of the genome numbering is compatible with a simple numeric system
               continue=true
               if [ `echo {config[genomeRef]} | grep hg38 | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep hg19 | wc -l` != 0 ]
               then
@@ -43,6 +44,13 @@ rule filterBam:
                   samtools view -o {output} {input} `printf "2L\n2R\n3L\n3R\n4\n"`
                   echo `printf "2L\n2R\n3L\n3R\n4\n"`
                   samtools view -b {input} $mito > {params.chrM}
+              elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ]
+              then 
+                  continue=false
+                  cp {input} {output}
+                  echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
+                  touch {params.chrM}
+
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
