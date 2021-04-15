@@ -1,5 +1,5 @@
 #! usr/bin/env snakemake
-## npagane | risca lab | fastq2bam pipeline rules
+## npagane | risca lab | ATAC pipeline rules
 
 ################################
 # TSS enrichment (1b)
