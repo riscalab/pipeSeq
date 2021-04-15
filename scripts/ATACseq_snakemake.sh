@@ -16,8 +16,8 @@ TSS=$6
 mapq=$7
 chromSize=$8
 singleend=$9
-exeDir=$10
-snakemake=$11
+exeDir=${10}
+snakemake=${11}
 
 ###########
 # EXECUTE #
