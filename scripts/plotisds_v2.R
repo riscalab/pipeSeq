@@ -13,7 +13,8 @@ read.isd <- function(filename) {
 }
 
 make.hist.filename <- function(lib, histprefix, ext) {
-  temp_filename <- paste(lib,histprefix,sep="/") 
+  temp_filename <- paste(lib,histprefix,sep="_")
+  temp_filename <- paste(lib,temp_filename,sep="/") 
   filename <- paste(temp_filename, ext, sep=".")
   filename
 }

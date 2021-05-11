@@ -12,11 +12,11 @@ rule removeDuplicates:
         config['sample'] + "/{pre_tag}_{post_tag}{ext,.*}.rmdup.bam"
     params:
         sorted = config['sample'] + "/{pre_tag}_{post_tag}{ext}.SORT.bam",
-        histDupsLog = config['sample'] + "/hist_data_withdups.log",
-        histDupsPDF = config['sample'] + "/hist_graphwithdups.pdf",
-        dupsLog = config['sample'] + "/dups.log",
-        histNoDupsLog = config['sample'] + "/hist_data_withoutdups.log",
-        histNoDupsPDF = config['sample'] + "/hist_graphwithoutdups.pdf",
+        histDupsLog = config['sample'] + "/" + config['sample'] + "_hist_data_withdups.log",
+        histDupsPDF = config['sample'] + "/" + config['sample'] + "_hist_graphwithdups.pdf",
+        dupsLog = config['sample'] + "/" + config['sample'] + "_dups.log",
+        histNoDupsLog = config['sample'] + "/" + config['sample'] + "_hist_data_withoutdups.log",
+        histNoDupsPDF = config['sample'] + "/" + config['sample'] + "_hist_graphwithoutdups.pdf",
         stopAfter="5000000",
         width="1000"
     run:

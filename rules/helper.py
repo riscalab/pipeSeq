@@ -112,8 +112,8 @@ def sampleSummaryStats(temp, files, fastqDir, singleend, TSS=None):
             for lane in determine_lanes(fastqDir, ftp):
                 palign+=float(os.popen("tail -n1 " + ftp + "/*" + lane + "*.alignlog | awk '{{print $1}}'").read().strip()[0:-1])/len(determine_lanes(fastqDir, ftp))
             g.write(str(np.round(palign, 2)) + '%\t')
-            g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/dups.log").read().strip() +'\t')
-            g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/dups.log").read().strip() +'\t')
+            g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/*_dups.log").read().strip() +'\t')
+            g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/*_dups.log").read().strip() +'\t')
             os.system("samtools idxstats " + ftp + "/*.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
             g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
             g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
