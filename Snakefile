@@ -39,15 +39,14 @@ if config['pipe'] == 'ATACseq':
                 ), config['fastqDir'], config['sample'], 'peakCalls'
             ),
             # and TSS enrichment files
-            if os.path.exists(config['TSS']:
-                helper.customFileExpand(
-                    helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
-                        ".trim.st.all.blft.qft.RefSeqTSS.log",
-                        ".trim.st.all.qft.RefSeqTSS.log",
-                        ".trim.st.all.blft.RefSeqTSS.log",
-                        ".trim.st.all.RefSeqTSS.log"
-                    ), config['fastqDir'], config['sample'], 
-                )
+            helper.customFileExpand(
+                helper.conditionalExpand_2(int(config['mapq']), os.path.exists(config['blacklist']),
+                    ".trim.st.all.blft.qft.RefSeqTSS.log",
+                    ".trim.st.all.qft.RefSeqTSS.log",
+                    ".trim.st.all.blft.RefSeqTSS.log",
+                    ".trim.st.all.RefSeqTSS.log"
+                ), config['fastqDir'], config['sample'], 
+            )
 elif config['pipe'] == 'CUTnTag':
     # THIS WHILL CHANGE IN THE FUTURE. WILL ADD PEAK STUFF BUT FOR NOW MAKE IT LIKE fastq2bam
     rule all:

@@ -140,7 +140,11 @@ def sampleSummaryStats(temp, files, fastqDir, singleend, TSS=None):
             g.write(str(np.round(adapter, 2)) + '%')
             if temp == "tempSummary_atac.log":
                 g.write('\t')
-                g.write(os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS.log | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip() +'\t')
+                tss_enrich = os.popen("sort -nrk1,1 " + ftp + """/*RefSeqTSS.log | head -1 | awk '{{printf("%.3f", $1)}}' """).read().strip()
+                if float(tss_enrich) > 0:
+                    g.write(tss_enrich +'\t')
+                else:
+                    g.write('NA' + '\t')
                 g.write(os.popen("""calc(){ awk "BEGIN { print "$*" }"; }; """ +  "den=`samtools view -c " + ftp + "/*.rmdup.atac.bam`; num=`bedtools sort -i " 
                     + ftp + "/peakCalls/*_peaks.narrowPeak | bedtools merge -i stdin | bedtools intersect -u -nonamecheck -a " +ftp + "/*.rmdup.atac.bam -b stdin -ubam "
                     + "| samtools view -c`; calc $num/$den " + """| awk '{{printf("%.2f", $1)}}' """).read().strip())
