@@ -31,7 +31,7 @@ def findFiles(fastqDir, samp):
     try:
         for base, dirs, files in os.walk(fastqDir + "/"):
             for fastq in files:
-                tempDelim = re.compile("_S[0-9]_")
+                tempDelim = re.compile(r'_S[0-9]+_')
                 tempDelim = tempDelim.search(fastq).group(0)
                 if fastq.endswith(".fastq.gz") and samp == fastq.split(tempDelim)[0]:
                     tmp = fastq.split(".fastq.gz")[0]
@@ -40,7 +40,7 @@ def findFiles(fastqDir, samp):
                     tempList.extend(tmp.split('_'))
                     WHOLEFILES.append(tempList)
     except:
-        print('could not find gzipped FASTQ files (ending in fastq.gz) OR could not find FATSQ file for given sample ' + samp + '/nmake sure that the SAMPLE NAME DOES NOT HAVE UNDERSCORES (_)\n')
+        print('could not find gzipped FASTQ files (ending in fastq.gz) OR could not find FATSQ file for given sample ' + samp + '\n')
         sys.exit()
     return WHOLEFILES
 

@@ -16,7 +16,6 @@ function print_usage {
     echo "USAGE: $0 [-c .] [-f /rugpfs/fs0/risc_lab/store/risc_data/runs/FASTQs] [-s sample.txt]"
     echo "  -c   PATH   path to where you want to process the sequencing data"
     echo "  -f   PATH   path to where your FASTQ files live"
-    echo "  -s   PATH   path to your samples.txt file that has all your sample names"
     echo "OPTIONAL ARGUMENTS:"
     echo "  -g=hg38      STRING  genome to align FATSQ files to (i.e. hg38, hg19, mm9, mm10, etc.)"
     echo "  -b~hg38      PATH    path to where your blacklist file lives for filtering"
@@ -39,13 +38,12 @@ done
 # Parse short options
 singleend="False"
 OPTIND=1
-while getopts c:f:s:g:b:m:p:e:h: option
+while getopts c:f:g:b:m:p:e:h: option
 do
 case "${option}"
 in
 c) cwd=${OPTARG};; # working directory for analysis (REQUIRED, i.e. path/to/workingDirectory)
 f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. path/to/fastq)
-s) sampleText=${OPTARG};; # sample names text file (REQUIRED, string, i.e. path/to/samples.txt)
 g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
 b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
@@ -58,9 +56,9 @@ done
 shift $(expr $OPTIND - 1) # remove options from positional parameters
 
 # check for required arguments
-if [ -z "$cwd" ] || [ -z "$fastqDir" ] || [ -z "$sampleText" ]
+if [ -z "$cwd" ] || [ -z "$fastqDir" ]
 then
-    echo "must specificy the desired working directory (-c), fastq directory (-f), and text file with sample names (-s)"
+    echo "must specificy the desired working directory (-c) and fastq directory (-f)."
     echo ""
     print_usage
     exit
@@ -122,6 +120,11 @@ cd $cwd
 
 # set conda env
 source activate fastq2bam
+
+# make samples.txt file
+echo "Generating samples.txt file" 
+sampleText="samples.txt"
+ls $fastqDir | awk -F'_S[-.0-9]*_' '{print $1}' | sort -u > $sampleText
 
 # run CUTnTag 
 numSamples=`wc -l $sampleText | awk '{print $1}' `

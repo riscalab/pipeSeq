@@ -139,7 +139,7 @@ source activate fastq2bam
 # make samples.txt file
 echo "Generating samples.txt file" 
 sampleText="samples.txt"
-ls $fastqDir | awk -F'_S._' '{print $1}' | sort -u > $sampleText
+ls $fastqDir | awk -F'_S[-.0-9]*_' '{print $1}' | sort -u > $sampleText
 
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}'`
