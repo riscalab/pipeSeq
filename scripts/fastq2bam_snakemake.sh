@@ -17,7 +17,6 @@ singleend=$7
 exeDir=$8
 snakemake=$9
 
-echo 'HELLO' $exeDir $pipe $singleend
 ###########
 # EXECUTE #
 ###########
