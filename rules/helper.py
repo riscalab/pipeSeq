@@ -36,7 +36,7 @@ def findFiles(fastqDir, samp):
                 if fastq.endswith(".fastq.gz") and samp == fastq.split(tempDelim)[0]:
                     tmp = fastq.split(".fastq.gz")[0]
                     tmp = tmp.split(tempDelim)[1]
-                    tempList = [samp]
+                    tempList = [samp, tempDelim[1:-1]]
                     tempList.extend(tmp.split('_'))
                     WHOLEFILES.append(tempList)
     except:
