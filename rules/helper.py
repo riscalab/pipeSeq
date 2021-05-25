@@ -6,6 +6,7 @@ import numpy as np
 import datetime
 import sys
 import subprocess
+import re
 
 ################################
 # parameters and functions
@@ -30,9 +31,14 @@ def findFiles(fastqDir, samp):
     try:
         for base, dirs, files in os.walk(fastqDir + "/"):
             for fastq in files:
-                if fastq.endswith(".fastq.gz") and samp == fastq.split("_")[0]:
+                tempDelim = re.compile("_S[0-9]_")
+                tempDelim = tempDelim.search(fastq).group(0)
+                if fastq.endswith(".fastq.gz") and samp == fastq.split(tempDelim)[0]:
                     tmp = fastq.split(".fastq.gz")[0]
-                    WHOLEFILES.append(tmp.split('_'))
+                    tmp = tmp.split(tempDelim)[1]
+                    tempList = [samp]
+                    tempList.extend(tmp.split('_'))
+                    WHOLEFILES.append(tempList)
     except:
         print('could not find gzipped FASTQ files (ending in fastq.gz) OR could not find FATSQ file for given sample ' + samp + '/nmake sure that the SAMPLE NAME DOES NOT HAVE UNDERSCORES (_)\n')
         sys.exit()
