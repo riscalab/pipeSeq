@@ -7,7 +7,7 @@ available pipelines:
 ####################
 fastq2bam (general processing)
 ATACseq (runs fastq2bam + then calls peaks and other stats) 
-CUTnTag (runs fastq2bam but with different alignment command)
+CUTnTag (essentially just fastq2bam but with different alignment command)
 
 #########################################################################################
 fastq2bam: align fastq data into bam format and produce quality metrics of the sequencing
@@ -17,14 +17,13 @@ fastq2bam: align fastq data into bam format and produce quality metrics of the s
 to run
 ######
 
-bash fastq2bam.sh -c <1> -f <2> -s <3> -<opts>
+bash fastq2bam.sh -c <1> -f <2> -<opts>
 
 where:
     <1> = desired working directory for processing (string, i.e. path/to/dir)
     <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
-    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
     -<opts> additional options:
-        -g = genome reference for alignment (string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+        -g = genome reference for alignment (string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10', etc.)
             default: hg38
         -b = blacklist for filtering (string, defaults to -g blacklist OR overwrite with path/to/blacklist)
             default: /rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/hg38-blacklist.v2.bed
@@ -34,74 +33,42 @@ where:
             default: ""
 
 * example *
-bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
+bash fastq2bam.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs 
+
+all the other pipelines can be run as the same, just use "ATACseq.sh" or "CUTnTag.sh" rather than "fastq2bam.sh".
+for specific optional arguments for each pipeline, run the executable (without any arguments) to see behavior.
+
+* example help command *
+bash ATACseq.sh
+
+* example help output *
+must specificy the desired working directory (-c) and fastq directory (-f).
+
+USAGE: ATACseq.sh [-c .] [-f /rugpfs/fs0/risc_lab/store/risc_data/runs/FASTQs] [-s sample.txt]
+  -c   PATH   path to where you want to process the sequencing data
+  -f   PATH   path to where your FASTQ files live
+OPTIONAL ARGUMENTS:
+  -g=hg38      STRING  genome to align FATSQ files to (i.e. hg38, hg19, mm9, mm10, etc.)
+  -b~hg38      PATH    path to where your blacklist file lives for filtering
+  -m=30        INT     map quality threshold for alignment
+  -p=''        STRING  additional snakemake flags and arguments for compilation
+  --singleend          if FASTQ files are single-end rather than paired-end sequenced
+  --help               print this usage text and exit
 
 ###########
 environment
 ###########
 
-must not be in any other conda environment except fastq2bam or base
+must not be in any other conda environment except the pipeline you want to run (i.e. fastq2bam or ATACseq) 
+or you can just be in the base env:
 conda activate base
 
 ##############
 file structure
 ##############
 
-fastq2bam.sh <executable>
+<pipeline>.sh <executable, such as fastq2bam or ATACseq or CUTnTag>
 Snakefile <constructs pipeline through including rules>
 rules/* <rules for pipeline along with any helper files>
 scripts/* <R, python, or bash scripts to call in pipeline>
 envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
-
-#########################################################################################
-ATACseq: analyze ATACseq bam files to call peaks and make tracks
-#########################################################################################
-
-######
-to run
-######
-
-bash ATACseq.sh -c <1> -f <2> -s <3> -<opts>
-where:
-    <1> = desired working directory for processing (string, i.e. path/to/dir)
-    <2> = directory with fastq files, presumably on store somewhere (string, i.e. path/to/fastq)
-    <3> = samples text file, each sample on separate lines to be processed (string, i.e. path/to/samples)
-    -<opts> additional options:
-        -g = genome reference for alignment (string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
-            default: hg38
-        -b = blacklist for filtering (string, defaults to -g blacklist OR overwrite with path/to/blacklist)
-            default: /rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg38/blacklist/ATAC_blacklist.bed
-        -m = the map quality threshold for alignment (int, i.e. 30)
-            default: 30
-        -p = any snakemake flags for compilation (string, i.e. unlock)
-            default: ""
-
-* example *
-bash ATACseq.sh -c . -f /rugpfs/fs0/risc_lab/scratch/risc_data/FastqsFromBCLs -s samples.txt
-
-###########
-environment
-###########
-
-must not be in any other conda environment except ATACseq or base
-conda activate base
-
-macs2 needs to run in a python2 env but snakemake requires python3. small indepedent conda env for macs2_python2
-was created and exported via:
-    conda activate macs2_python2 (now deleted but can be restored from YAML file)
-    conda env export > /rugpfs/fs0/risc_lab/store/risc_soft/YAML/macs2_python2.yaml
-    ln -s /rugpfs/fs0/risc_lab/store/risc_soft/YAML/macs2_python2.yaml envs/
-(the YAML file is symlinked to the envs/ directory)
-
-##############
-file structure
-##############
-
-ATACseq.sh <executable>
-Snakefile <constructs pipeline from rules>
-rules/* <rules for executable pipeline with helper code>
-scripts/* <R, python, or bash scripts to call in pipeline>
-envs/* <stores indepedent and small conda environments for specific snakemake rules that would clash with main conda env>
-
-##############
-will update here with CUTnTag soon 
