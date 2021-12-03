@@ -44,7 +44,7 @@ case "${option}"
 in
 c) cwd=${OPTARG};; # working directory for analysis (REQUIRED, i.e. path/to/workingDirectory)
 f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. path/to/fastq)
-g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10')
+g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: 'hg38', 'hg19', 'mm9', 'mm10', ect.)
 b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
@@ -116,8 +116,22 @@ then
         then
             blacklist="None"
         fi
+    elif [ "$genomeMap" == "GRCg7b" ]
+    then
+        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7b/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
+    elif [ "$genomeMap" == "GRCg7w" ]
+    then
+        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7w/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI."
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI, GRCg7b, GRCg7w."
         echo "talk to nicole to get your genome on the cluster if not there.\n"
         exit
     fi
