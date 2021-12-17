@@ -30,7 +30,11 @@ rule filterBam:
               then 
                   num=19
                   mito="M"
-              elif [ `echo {config[genomeRef]} | grep EF2 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep GRCg7b | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep GRCg7w | wc -l` != 0 ]
+              then
+                  num=39
+                  mito="M"
+	      elif [ `echo {config[genomeRef]} | grep EF2 | wc -l` != 0 ]
               then
                   continue=false
                   mito="MT"
@@ -50,7 +54,11 @@ rule filterBam:
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-
+	      elif [ `echo {config[genomeRef]} | grep hfxDS2 | wc -l` != 0 ]
+              then
+                  continue=false
+                  samtools view -o {output} {input} `printf "NC_013967.1\nNC_013968.1\nNC_013965.1\nNC_013964.1\nNC_013966.1"`
+                  echo `printf "NC_013967.1\nNC_013968.1\nNC_013965.1\nNC_013964.1\nNC_013966.1"`
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi

@@ -130,9 +130,16 @@ then
         then
             blacklist="None"
         fi
+    elif [ "$genomeMap" == "hfxDS2" ]
+    then
+        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/hfxDS2/genome/Sequence/Bowtie2Index/genome"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI, GRCg7b, GRCg7w."
-        echo "talk to nicole to get your genome on the cluster if not there.\n"
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI, GRCg7b, GRCg7w, hfxDS2."
+        echo "talk to Andrew to get your genome on the cluster if not there.\n"
         exit
     fi
 else
