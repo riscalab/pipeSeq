@@ -57,8 +57,8 @@ rule filterBam:
 	      elif [ `echo {config[genomeRef]} | grep hfxDS2 | wc -l` != 0 ]
               then
                   continue=false
-                  samtools view -o {output} {input} `printf "1\npHV1\npHV2\npHV3\npHV4"`
-                  echo `printf "1\npHV1\npHV2\npHV3\npHV4"`
+                  samtools view -o {output} {input} `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
+                  echo `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
