@@ -41,6 +41,7 @@ def findFiles(fastqDir, samp):
                     WHOLEFILES.append(tempList)
     except:
         print('could not find gzipped FASTQ files (ending in fastq.gz) OR could not find FATSQ file for given sample ' + samp + '\n')
+        print('Pipeline thinks the fastq files are located in ' + fastqDir + '\n')
         sys.exit()
     return WHOLEFILES
 
