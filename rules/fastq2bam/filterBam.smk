@@ -32,8 +32,11 @@ rule filterBam:
                   mito="M"
               elif [ `echo {config[genomeRef]} | grep GRCg7b | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep GRCg7w | wc -l` != 0 ]
               then
-                  num=39
+                  continue=false
                   mito="M"
+		  samtools view -o {output} {input} `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchr23\nchr24\nchr25\nchr26\nchr27\nchr28\nchr29\nchr30\nchr31\nchr32\nchr33\nchr34\nchr35\nchr36\nchr37\nchr38\nchr39\nchrW\nchrZ"`
+                  echo `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchr23\nchr24\nchr25\nchr26\nchr27\nchr28\nchr29\nchr30\nchr31\nchr32\nchr33\nchr34\nchr35\nchr36\nchr37\nchr38\nchr39\nchrW\nchrZ"`
+                  samtools view -b {input} $mito > {params.chrM}
 	      elif [ `echo {config[genomeRef]} | grep EF2 | wc -l` != 0 ]
               then
                   continue=false

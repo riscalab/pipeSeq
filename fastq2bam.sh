@@ -118,14 +118,14 @@ then
         fi
     elif [ "$genomeMap" == "GRCg7b" ]
     then
-        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7b/Bowtie2Index/genome"
+        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7b/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]
         then
             blacklist="None"
         fi
     elif [ "$genomeMap" == "GRCg7w" ]
     then
-        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7w/Bowtie2Index/genome"
+        genomeRef="/rugpfs/fs0/home/ascortea/store/risc_data/downloaded/Chicken/GRCg7w/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]
         then
             blacklist="None"
