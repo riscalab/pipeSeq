@@ -57,6 +57,12 @@ rule filterBam:
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
+	      elif [ `echo {config[genomeRef]} | grep ecoli_mg1655 | wc -l` != 0 ]
+              then 
+                  continue=false
+                  cp {input} {output}
+                  echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
+                  touch {params.chrM}
 	      elif [ `echo {config[genomeRef]} | grep hfxDS2 | wc -l` != 0 ]
               then
                   continue=false
