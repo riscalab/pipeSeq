@@ -51,7 +51,14 @@ rule filterBam:
                   samtools view -o {output} {input} `printf "2L\n2R\n3L\n3R\n4\n"`
                   echo `printf "2L\n2R\n3L\n3R\n4\n"`
                   samtools view -b {input} $mito > {params.chrM}
-              elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep sacCer3 | wc -l` != 0 ]
+              then
+                  continue=false
+                  mito="M"
+                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µchr2µichr2µ"`
+                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\n"`
+                  samtools view -b {input} $mito > {params.chrM}
+	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
