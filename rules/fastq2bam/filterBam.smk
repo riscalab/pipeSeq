@@ -58,7 +58,7 @@ rule filterBam:
                   samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µchr2µichr2µ"`
                   echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\n"`
                   samtools view -b {input} $mito > {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ]
+	      elif [ `echo {config[genomeRef]} | grep HBV | HBV_PsiI | HBV_3X | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
