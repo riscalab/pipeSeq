@@ -130,6 +130,24 @@ then
         then
             blacklist="None"
         fi
+	elif [ "$genomeMap" == "hg19_HBV" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV/genome/Sequence/Bowtie2Index/genome"
+		TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg19/GENCODE/gencode.v19.tss.bed"
+		chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV/genome/chrom.sizes"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/lustre/fs4/home/ascortea/store/risc_data/downloaded/hg19_HBV/genome/blacklist/hg19-blacklist.v2.bed"
+        fi
+    elif [ "$genomeMap" == "hg19_HBV_PNAS" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV_PNAS/genome/Sequence/Bowtie2Index/genome"
+		TSS="/rugpfs/fs0/risc_lab/store/vrisca/lab-shared/dl-annotations/hg19/GENCODE/gencode.v19.tss.bed"
+		chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV_PNAS/genome/chrom.sizes"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="/lustre/fs4/home/ascortea/store/risc_data/downloaded/hg19_HBV_PNAS/genome/blacklist/hg19-blacklist.v2.bed"
+        fi
     else
         echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI."
         echo "talk to nicole to get your genome on the cluster if not there.\n"
