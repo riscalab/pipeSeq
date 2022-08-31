@@ -17,7 +17,7 @@ function print_usage {
     echo "  -c   PATH   path to where you want to process the sequencing data"
     echo "  -f   PATH   path to where your FASTQ files live"
     echo "OPTIONAL ARGUMENTS:"
-    echo "  -g=hg38      STRING  genome to align FATSQ files to (i.e. hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_Pis1, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB.)"
+    echo "  -g=hg38      STRING  genome to align FATSQ files to (i.e. hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_PNAS, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB.)"
     echo "  -b~hg38      PATH    path to where your blacklist file lives for filtering"
     echo "  -m=30        INT     map quality threshold for alignment"
     echo "  -p=''        STRING  additional snakemake flags and arguments for compilation"
@@ -44,7 +44,7 @@ case "${option}"
 in
 c) cwd=${OPTARG};; # working directory for analysis (REQUIRED, i.e. path/to/workingDirectory)
 f) fastqDir=${OPTARG};; # directory with fastq files (REQUIRED, string, i.e. path/to/fastq)
-g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_Pis1, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB, sacCer3.)
+g) genomeMap=${OPTARG};; # genome reference for alignment (OPTIONAL, string, OPTS: hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_PNAS, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB, sacCer3.)
 b) blacklist=${OPTARG};; # blacklist for filtering (OPTIONAL, string, defaults to genomeMap blacklist OR overwrite with path/to/blacklist)
 m) mapq=${OPTARG};; # the map quality threshold for alignment (OPTIONAL, int, i.e. 30)
 p) snakemake=${OPTARG};; # any snakemake flags for compilation (OPTIONAL, string, i.e. "--snakemake unlock")
@@ -109,33 +109,12 @@ then
         then
             blacklist="None"
         fi
-    elif [ "$genomeMap" == "HBV_PsiI" ]
+    elif [ "$genomeMap" == "HBV_PNAS" ]
     then
-        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/HBV_PsiI/genome/Sequence/Bowtie2Index/genome"
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/HBV_PNAS/genome/Sequence/Bowtie2Index/genome"
         if [ -z "$blacklist" ]
         then
             blacklist="None"
-        fi
-    elif [ "$genomeMap" == "HBV_3X" ]
-    then
-        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/HBV_3X/genome/Sequence/Bowtie2Index/genome"
-        if [ -z "$blacklist" ]
-        then
-            blacklist="None"
-        fi
-    elif [ "$genomeMap" == "hg19_HBV" ]
-    then
-        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV/genome/Sequence/Bowtie2Index/genome"
-        if [ -z "$blacklist" ]
-        then
-            blacklist="/lustre/fs4/home/ascortea/store/risc_data/downloaded/hg19_HBV/genome/blacklist/hg19-blacklist.v2.bed"
-        fi
-    elif [ "$genomeMap" == "hg19_HBV_PNAS" ]
-    then
-        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/hg19_HBV_PNAS/genome/Sequence/Bowtie2Index/genome"
-        if [ -z "$blacklist" ]
-        then
-            blacklist="/lustre/fs4/home/ascortea/store/risc_data/downloaded/hg19_HBV_PNAS/genome/blacklist/hg19-blacklist.v2.bed"
         fi
     elif [ "$genomeMap" == "GRCg7b" ]
     then
@@ -180,7 +159,7 @@ then
             blacklist="None"
         fi
     else
-        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_Pis1, HBV_3X, hg19_HBV, hg19_HBV_PNAS, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB, sacCer3."
+        echo "unrecognized genome.\navailable genomes: hg38, hg19, mm9, mm10, dm6, EF2, HBV, HBV_PNAS, GRCg7b, GRCg7w, hfxDS2, ecoli_mg1655, Lambda_NEB, sacCer3."
         echo "talk to Andrew to get your genome on the cluster if not there.\n"
         exit
     fi

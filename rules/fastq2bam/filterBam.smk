@@ -58,7 +58,7 @@ rule filterBam:
                   samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µchr2µichr2µ"`
                   echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\n"`
                   samtools view -b {input} $mito > {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_3X| wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PsiI | wc -l` != 0 ]
+	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PNAS | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
@@ -81,20 +81,6 @@ rule filterBam:
                   continue=false
                   samtools view -o {output} {input} `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
                   echo `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
-		  elif [ `echo {config[genomeRef]} | grep hg19_HBV | wc -l` != 0 ]
-              then 
-                  continue=false
-                  mito="M"
-                  samtools view -o {output} {input} `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchrX\nchrY\nChrHBV_EcoRI"`
-                  echo `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchrX\nchrY\nChrHBV_EcoRI"`
-                  samtools view -b {input} $mito > {params.chrM}
-		  elif [ `echo {config[genomeRef]} | grep hg19_HBV_PNAS | wc -l` != 0 ]
-              then 
-                  continue=false
-                  mito="M"
-                  samtools view -o {output} {input} `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchrX\nchrY\nChr_HBV_PNAS"`
-                  echo `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchrX\nchrY\nChr_HBV_PNAS"`
-                  samtools view -b {input} $mito > {params.chrM}
               else
                   echo "cannot determine original alignment genome for further filtering"
               fi
