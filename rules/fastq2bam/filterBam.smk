@@ -55,8 +55,8 @@ rule filterBam:
               then
                   continue=false
                   mito="M"
-                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µchr2µichr2µ"`
-                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\n"`
+                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µ"`
+                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrXI\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2µ"`
                   samtools view -b {input} $mito > {params.chrM}
 	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PNAS | wc -l` != 0 ]
               then 
@@ -81,7 +81,13 @@ rule filterBam:
                   continue=false
                   samtools view -o {output} {input} `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
                   echo `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
-              else
+		  elif [ `echo {config[genomeRef]} | grep Xenla10.1 | wc -l` != 0 ]
+              then
+                  continue=false
+                  samtools view -o {output} {input} `printf "Chr1L\nChr1S\nChr2L\nChr2S\nChr3L\nChr3S\nChr4L\nChr4S\nChr5L\nChr5S\nChr6L\nChr6S\nChr7L\nChr7S\nChr8L\nChr8S\nChr9_10L\nChr9_10S"`
+                  echo `printf "printf "Chr1L\nChr1S\nChr2L\nChr2S\nChr3L\nChr3S\nChr4L\nChr4S\nChr5L\nChr5S\nChr6L\nChr6S\nChr7L\nChr7S\nChr8L\nChr8S\nChr9_10L\nChr9_10S"`
+                  mito="MT"
+			  else
                   echo "cannot determine original alignment genome for further filtering"
               fi
               if [ `samtools view -H {input} | grep chr | wc -l` == 0 ] && [ "$continue" == true ]
