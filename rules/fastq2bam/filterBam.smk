@@ -81,7 +81,7 @@ rule filterBam:
                   continue=false
                   samtools view -o {output} {input} `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
                   echo `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
-		  elif [ `echo {config[genomeRef]} | grep Xenla10.1 | wc -l` != 0 ]
+		  elif [ `echo {config[genomeRef]} | grep Xenla10.1 | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep Xenla2 | wc -l` != 0 ]
               then
                   continue=false
                   samtools view -o {output} {input} `printf "Chr1L\nChr1S\nChr2L\nChr2S\nChr3L\nChr3S\nChr4L\nChr4S\nChr5L\nChr5S\nChr6L\nChr6S\nChr7L\nChr7S\nChr8L\nChr8S\nChr9_10L\nChr9_10S"`

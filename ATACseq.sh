@@ -139,6 +139,15 @@ then
         then
             blacklist="None"
         fi
+	elif [ "$genomeMap" == "Xenla2" ]
+    then
+        genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla2/genome/Sequence/Bowtie2Index/genome"
+        TSS="/lustre/fs4/home/ascortea/store/ascortea/genomes/Xenla2/genome/Annotation/Xenla2_TSS.bed"
+        chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla2/genome/chrom.sizes"
+        if [ -z "$blacklist" ]
+        then
+            blacklist="None"
+        fi
     else
         echo "unrecognized genome.\navailable genomes: hg38, hg19, mm10, mm9, dm6, EF2, HBV, HBV_PsiI."
         echo "talk to nicole to get your genome on the cluster if not there.\n"
