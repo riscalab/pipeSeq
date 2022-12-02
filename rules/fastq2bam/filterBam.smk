@@ -55,8 +55,8 @@ rule filterBam:
               then
                   continue=false
                   mito="M"
-                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2M"`
-                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchr2M"`
+                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
+                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
                   samtools view -b {input} $mito > {params.chrM}
 	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PNAS | wc -l` != 0 ]
               then 
