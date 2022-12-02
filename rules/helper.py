@@ -122,7 +122,7 @@ def sampleSummaryStats(temp, files, fastqDir, singleend, TSS=None):
             g.write(os.popen("""awk '{{if (FNR == 8) print $11}}' """ + ftp + "/*_dups.log").read().strip() +'\t')
             g.write(os.popen("""awk '{{if (FNR == 8) dec=$10}}END{{printf("%.2f%",100*dec)}}' """ + ftp + "/*_dups.log").read().strip() +'\t')
             os.system("samtools idxstats " + ftp + "/*.st.bam > " + ftp + "/" + ftp + ".idxstats.dat")
-            g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
+            g.write(os.popen("""awk '{{sum+= $3; if ($1 == "chrM" || $1 == "MT" || $1 == "M") mito=$3}}END{{printf("%.2f%",100*mito/sum) }}' """ + ftp + "/" + ftp + ".idxstats.dat").read().strip() +'\t')
             g.write(os.popen("samtools idxstats " + ftp + """/*.st.all*rmdup.bam | awk '{{s+=$3}} END{{printf("%i", s/2)}}'""").read().strip() +'\t')
             mycoplasma=0
             if singleend == 'True':
