@@ -76,7 +76,7 @@ rule filterBam:
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-		  elif [ `echo {config[genomeRef]} | grep rDNA_S288C | wc -l` != 0 ]
+	      elif [ `echo {config[genomeRef]} | grep rDNA_S288C | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
