@@ -133,7 +133,7 @@ then
 	elif [ "$genomeMap" == "Xenla10.1" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla10.1/genome/Sequence/Bowtie2Index/genome"
-        TSS="/lustre/fs4/home/ascortea/store/ascortea/genomes/Xenla10.1/genome/Annotation/XL10_1_GCF.bed"
+        TSS="/lustre/fs4/home/ascortea/store/ascortea/genomes/Xenla10.1/genome/Annotation/Xenla10.1_TSS.bed" #This should be changed at somepoint when a proper TSS file is added
         chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla10.1/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
