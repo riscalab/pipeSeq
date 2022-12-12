@@ -34,10 +34,10 @@ rule filterBam:
               then
                   continue=false
                   mito="M"
-		  samtools view -o {output} {input} `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchr23\nchr24\nchr25\nchr26\nchr27\nchr28\nchr29\nchr30\nchr31\nchr32\nchr33\nchr34\nchr35\nchr36\nchr37\nchr38\nchr39\nchrW\nchrZ"`
+                  samtools view -o {output} {input} `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchr23\nchr24\nchr25\nchr26\nchr27\nchr28\nchr29\nchr30\nchr31\nchr32\nchr33\nchr34\nchr35\nchr36\nchr37\nchr38\nchr39\nchrW\nchrZ"`
                   echo `printf "chr1\nchr2\nchr3\nchr4\nchr5\nchr6\nchr7\nchr8\nchr9\nchr10\nchr11\nchr12\nchr13\nchr14\nchr15\nchr16\nchr17\nchr18\nchr19\nchr20\nchr21\nchr22\nchr23\nchr24\nchr25\nchr26\nchr27\nchr28\nchr29\nchr30\nchr31\nchr32\nchr33\nchr34\nchr35\nchr36\nchr37\nchr38\nchr39\nchrW\nchrZ"`
                   samtools view -b {input} $mito > {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep EF2 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep EF2 | wc -l` != 0 ]
               then
                   continue=false
                   mito="MT"
@@ -58,42 +58,42 @@ rule filterBam:
                   samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
                   echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
                   samtools view -b {input} $mito > {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PNAS | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep HBV | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep HBV_PNAS | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep ecoli_mg1655 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep ecoli_mg1655 | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep Lambda_cI857ind_1_Sam_7 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep Lambda_cI857ind_1_Sam_7 | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep rDNA_S288C | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep rDNA_S288c | wc -l` != 0 ]
               then 
                   continue=false
                   cp {input} {output}
                   echo "NO FILTERING AT THIS STEP. ONLY ONE CONTINUOUS DNA SEGMENT"
                   touch {params.chrM}
-	      elif [ `echo {config[genomeRef]} | grep hfxDS2 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep hfxDS2 | wc -l` != 0 ]
               then
                   continue=false
                   samtools view -o {output} {input} `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
                   echo `printf "chr1\nchrpHV1\nchrpHV2\nchrpHV3\nchrpHV4"`
-		  elif [ `echo {config[genomeRef]} | grep Xenla10.1 | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep Xenla2 | wc -l` != 0 ]
+              elif [ `echo {config[genomeRef]} | grep Xenla10.1 | wc -l` != 0 ] || [ `echo {config[genomeRef]} | grep Xenla2 | wc -l` != 0 ]
               then
                   continue=false
                   samtools view -o {output} {input} `printf "Chr1L\nChr1S\nChr2L\nChr2S\nChr3L\nChr3S\nChr4L\nChr4S\nChr5L\nChr5S\nChr6L\nChr6S\nChr7L\nChr7S\nChr8L\nChr8S\nChr9_10L\nChr9_10S"`
                   echo `printf "printf "Chr1L\nChr1S\nChr2L\nChr2S\nChr3L\nChr3S\nChr4L\nChr4S\nChr5L\nChr5S\nChr6L\nChr6S\nChr7L\nChr7S\nChr8L\nChr8S\nChr9_10L\nChr9_10S"`
                   mito="MT"
-			  else
+              else
                   echo "cannot determine original alignment genome for further filtering"
               fi
               if [ `samtools view -H {input} | grep chr | wc -l` == 0 ] && [ "$continue" == true ]
