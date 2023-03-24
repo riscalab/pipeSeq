@@ -128,7 +128,7 @@ ls $fastqDir | awk -F'_S[-.0-9]*_' '{print $1}' | sort -u > $sampleText
 
 # run CUTnTag 
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-CUTnTag=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/CUTnTag_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq  $singleend $exeDir $snakemake)
+CUTnTag=$(sbatch -p hpc --array=1-$numSamples $exeDir/scripts/CUTnTag_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq  $singleend $exeDir $snakemake)
 
 # get job id
 if ! echo ${CUTnTag} | grep -q "[1-9][0-9]*$"; then
@@ -141,4 +141,4 @@ fi
 
 # summary stats for CUTnTag after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$CUTnTagID --wrap="python $exeDir/rules/helper.py 2 $CUTnTagID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir"
+sbatch -p hpc --depend=afterok:$CUTnTagID --wrap="python $exeDir/rules/helper.py 2 $CUTnTagID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir"

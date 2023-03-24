@@ -133,7 +133,7 @@ then
 	elif [ "$genomeMap" == "Xenla10.1" ]
     then
         genomeRef="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla10.1/genome/Sequence/Bowtie2Index/genome"
-        TSS="/lustre/fs4/home/ascortea/store/ascortea/genomes/Xenla10.1/genome/Annotation/Xenla10.1_TSS.bed" #This should be changed at somepoint when a proper TSS file is added
+        TSS="/lustre/fs4/home/ascortea/store/risc_data/downloaded/Xenla10.1/genome/Annotation/Xenla10.1_TSS.bed" #This should be changed at somepoint when a proper TSS file is added
         chromSize="/rugpfs/fs0/risc_lab/store/risc_data/downloaded/Xenla10.1/genome/chrom.sizes"
         if [ -z "$blacklist" ]
         then
@@ -177,7 +177,7 @@ ls $fastqDir | awk -F'_S[-.0-9]*_' '{print $1}' | sort -u > $sampleText
 
 # run ATACseq
 numSamples=`wc -l $sampleText | awk '{print $1}' `
-ATACseq=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $singleend $exeDir $snakemake)
+ATACseq=$(sbatch -p hpc --array=1-$numSamples $exeDir/scripts/ATACseq_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $TSS $mapq $chromSize $singleend $exeDir $snakemake)
 
 # get job id
 if ! echo ${ATACseq} | grep -q "[1-9][0-9]*$"; then
@@ -190,4 +190,4 @@ fi
 
 # summary stats for fastq2bam after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir $TSS $chromSize"
+sbatch -p hpc --depend=afterok:$ATACseqID --wrap="python $exeDir/rules/helper.py 1 $ATACseqID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir $TSS $chromSize"

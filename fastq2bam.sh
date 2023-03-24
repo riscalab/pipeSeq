@@ -206,7 +206,7 @@ ls $fastqDir | awk -F'_S[-.0-9]*_' '{print $1}' | sort -u > $sampleText
 
 # run fastq2bam
 numSamples=`wc -l $sampleText | awk '{print $1}'`
-fastq2bam=$(sbatch -p risc,hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq $singleend $exeDir $snakemake)
+fastq2bam=$(sbatch -p hpc --array=1-$numSamples $exeDir/scripts/fastq2bam_snakemake.sh $cwd $fastqDir $sampleText $genomeRef $blacklist $mapq $singleend $exeDir $snakemake)
 
 # get job id
 if ! echo ${fastq2bam} | grep -q "[1-9][0-9]*$"; then
@@ -219,4 +219,4 @@ fi
 
 # summary stats for fastq2bam after successful completion
 myInvocation="$(printf %q "$BASH_SOURCE")$((($#)) && printf ' %q' "$@")"
-sbatch -p risc,hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir"
+sbatch -p hpc --depend=afterok:$fastq2bamID --wrap="python $exeDir/rules/helper.py 0 $fastq2bamID $sampleText '$myInvocation' $fastqDir $genomeRef $blacklist $mapq $singleend $exeDir"
