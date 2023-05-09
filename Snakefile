@@ -89,8 +89,12 @@ if config['pipe'] == 'fastq2bam':
     include: "rules/fastq2bam/mergeBamIfNecessary.smk"
     include: "rules/fastq2bam/sortBam.smk"
     include: "rules/fastq2bam/filterBam.smk"
-    include: "rules/fastq2bam/blacklistFilter.smk"
-    include: "rules/fastq2bam/qualityFilter.smk"
+    if config['singleend'] == 'True':
+        include: "rules/fastq2bam/single_end/blacklistFilter.smk"
+        include: "rules/fastq2bam/single_end/qualityFilter.smk"
+    else:
+        include: "rules/fastq2bam/blacklistFilter.smk"
+        include: "rules/fastq2bam/qualityFilter.smk"
     include: "rules/fastq2bam/removeDuplicates.smk"
 
 if config['pipe'] == 'ATACseq':
