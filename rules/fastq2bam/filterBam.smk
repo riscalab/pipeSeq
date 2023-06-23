@@ -55,6 +55,13 @@ rule filterBam:
               then
                   continue=false
                   mito="chrM"
+                  samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI"`
+                  echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI"`
+                  samtools view -b {input} $mito > {params.chrM}
+              elif [ `echo {config[genomeRef]} | grep sacCer3w2M | wc -l` != 0 ]
+              then
+                  continue=false
+                  mito="chrM"
                   samtools view -o {output} {input} `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
                   echo `printf "chrI\nchrII\nchrIII\nchrIV\nchrV\nchrVI\nchrVII\nchrVIII\nchrIX\nchrX\nchrXI\nchrXII\nchrXIII\nchrXIV\nchrXV\nchrXVI\nchrM\nchr2M"`
                   samtools view -b {input} $mito > {params.chrM}
